@@ -233,7 +233,10 @@
     <div class="quiz-top">
       <span>Soal <b id="qNum">1</b>/<b id="qTotal">10</b></span>
       <span>Skor <b id="qScore">0</b></span>
-      <div class="timer-badge" id="timerBadge">⏱️ <b id="qTimer">30</b>s</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="muteBtn" onclick="toggleMute()" style="background:none; border:none; font-size:1.2rem; cursor:pointer;" title="Suara Musik">🔊</button>
+        <div class="timer-badge" id="timerBadge">⏱️ <b id="qTimer">30</b>s</div>
+      </div>
     </div>
     <div class="bar"><div class="bar-fill" id="qBar"></div></div>
     <div class="qcard"><div class="qtext" id="qText">…</div></div>
@@ -285,7 +288,8 @@
    ⚙️ KONFIGURASI
    ============================================================ */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaOAZ5jLZP4m86pH8i_ySNzfZ3xm7KJCyvM-K40z7d7M1RQLVRHiZaG7nkojbc2zrDdQ/exec';
-const WAKTU_PER_SOAL = 30;
+const WAKTU_PER_SOAL = 30; // Default PG
+const WAKTU_PER_ISIAN = 45; // Khusus Isian
 
 const MATERI_META = [
   { id:'quran1',  nama:"Al-Qur'an & Hadits 1", icon:'📖', c1:'#3b82f6', c2:'#1d4ed8', desc:'Semester 1' },
@@ -308,7 +312,9 @@ const KELAS_GRADIENTS = [
 const OPT_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
 const OPT_LETTERS = ['A','B','C','D'];
 
-// Saya akan membangun Default Bank dengan menggabungkan PG lama + Isian baru
+/* ============================================================
+   2. BANK SOAL (KELAS 1, 2, 3, 4, 5, DAN 6 SUDAH TERISI)
+   ============================================================ */
 const DEFAULT_BANK = {
 "1-quran1": [
   // PG (20 soal)
@@ -333,16 +339,16 @@ const DEFAULT_BANK = {
   { q:"اَلْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ adalah bunyi ayat ke ....", correct:"2", wrong:["1","3","4"], exp:"Ayat kedua Al-Fatihah adalah Alhamdulillahi rabbil 'alamin." },
   { q:"Kita harus belajar membaca Al-Qur'an dengan ....", correct:"Benar dan lancar", wrong:["Cepat dan asal","Sambil bermain","Malas-malasan"], exp:"Membaca Al-Qur'an harus dipelajari dengan sungguh-sungguh agar benar dan lancar." },
   // Isian (10 soal)
-  { q: "Huruf hijaiyah digunakan dalam kitab suci ....", type: "isian", correct: ["Al-Qur'an", "Alquran"], exp: "Al-Qur'an diturunkan dalam bahasa Arab." },
-  { q: "Jumlah seluruh huruf hijaiyah ada ....", type: "isian", correct: ["29"], exp: "Huruf hijaiyah berjumlah 29." },
-  { q: "Membaca huruf hijaiyah dimulai dari arah ....", type: "isian", correct: ["kanan", "kekanan"], exp: "Tulisan Arab dibaca dari kanan ke kiri." },
-  { q: "Harakat fathah pada <span class='ar'>بَ</span> berbunyi ....", type: "isian", correct: ["a"], exp: "Fathah berbunyi 'a'." },
-  { q: "Harakat kasrah pada <span class='ar'>مِ</span> berbunyi ....", type: "isian", correct: ["i"], exp: "Kasrah berbunyi 'i'." },
-  { q: "Harakat dhammah pada <span class='ar'>تُ</span> berbunyi ....", type: "isian", correct: ["u"], exp: "Dhammah berbunyi 'u'." },
-  { q: "Lafal <span class='ar'>بَ</span> dibaca ....", type: "isian", correct: ["ba"], exp: "Dibaca ba." },
-  { q: "Lafal <span class='ar'>مِ</span> dibaca ....", type: "isian", correct: ["mi"], exp: "Dibaca mi." },
-  { q: "Lafal <span class='ar'>اَلْحَمْدُ لِلّٰهِ</span> adalah ayat ke-... surah Al-Fatihah.", type: "isian", correct: ["2", "dua"], exp: "Alhamdulillahi rabbil 'alamin adalah ayat ke-2." },
-  { q: "Surah Al-Fatihah artinya ....", type: "isian", correct: ["pembuka"], exp: "Al-Fatihah berarti pembukaan." }
+  { q: "Huruf hijaiyah digunakan dalam kitab suci ....", type: "isian", correct: ["Al-Qur’an", "Alquran"], exp: "" },
+  { q: "Jumlah seluruh huruf hijaiyah ada ....", type: "isian", correct: ["29", "dua puluh sembilan"], exp: "" },
+  { q: "Membaca huruf hijaiyah dimulai dari arah ....", type: "isian", correct: ["kanan"], exp: "" },
+  { q: "Harakat <span class='ar'>◌َ</span> berbunyi ....", type: "isian", correct: ["a"], exp: "" },
+  { q: "Harakat <span class='ar'>◌ِ</span> berbunyi ....", type: "isian", correct: ["i"], exp: "" },
+  { q: "Harakat <span class='ar'>◌ُ</span> berbunyi ....", type: "isian", correct: ["u"], exp: "" },
+  { q: "Lafal <span class='ar'>بَ</span> dibaca ....", type: "isian", correct: ["ba"], exp: "" },
+  { q: "Lafal <span class='ar'>مِ</span> dibaca ....", type: "isian", correct: ["mi"], exp: "" },
+  { q: "Lafal <span class='ar'>اَلْحَمْدُ لِلّٰهِ</span> adalah ayat ke-... surah Al-Fatihah.", type: "isian", correct: ["2", "dua"], exp: "" },
+  { q: "Surah Al-Fatihah artinya ....", type: "isian", correct: ["pembuka"], exp: "" }
 ],
 "1-akidah1": [
   { q:"Nama-nama baik yang dimiliki oleh Allah Swt. disebut ....", correct:"Asmaul Husna", wrong:["Nama Nabi","Nama Malaikat","Nama Sahabat"], exp:"Asmaul Husna adalah nama-nama Allah yang indah dan baik." },
@@ -366,16 +372,16 @@ const DEFAULT_BANK = {
   { q:"Memberi makan hewan yang kelaparan adalah bentuk rasa ....", correct:"Syukur kepada Allah", wrong:["Takut kepada Allah","Marah kepada Allah","Benci kepada Allah"], exp:"Berbuat baik kepada makhluk Allah adalah salah satu cara bersyukur." },
   { q:"Sifat kasih sayang Allah kepada makhluk-Nya tidak pernah ....", correct:"Berhenti", wrong:["Habis","Datang","Ada"], exp:"Kasih sayang Allah tidak pernah putus kepada hamba-Nya yang beriman." },
   // Isian
-  { q: "Nama-nama baik Allah disebut ....", type: "isian", correct: ["Asmaulhusna", "Asmaul Husna"], exp: "Asmaul Husna berarti nama-nama yang baik." },
-  { q: "Ar-Rahmān artinya Allah Maha ....", type: "isian", correct: ["Pengasih"], exp: "Ar-Rahman berarti Maha Pengasih." },
-  { q: "Ar-Rahīm artinya Allah Maha ....", type: "isian", correct: ["Penyayang"], exp: "Ar-Rahim berarti Maha Penyayang." },
-  { q: "Allah memberi kasih sayang kepada ... makhluk.", type: "isian", correct: ["semua"], exp: "Allah menyayangi semua makhluk tanpa terkecuali." },
-  { q: "Menyayangi teman termasuk meneladani ....", type: "isian", correct: ["Ar-Rahman", "Ar-Rahmān"], exp: "Menyayangi sesama adalah wujud sifat Ar-Rahman." },
-  { q: "Jika teman tidak membawa pensil, sebaiknya kita ....", type: "isian", correct: ["meminjamkan"], exp: "Kita dianjurkan meminjamkan pensil." },
-  { q: "Memberi makan kucing adalah bentuk rasa ....", type: "isian", correct: ["sayang"], exp: "Memberi makan hewan adalah bentuk kasih sayang." },
-  { q: "Menyiram tanaman berarti merawat ....", type: "isian", correct: ["tumbuhan"], exp: "Menyiram tanaman adalah merawat tumbuhan." },
-  { q: "Menolong teman yang jatuh termasuk perbuatan ....", type: "isian", correct: ["terpuji"], exp: "Menolong sesama adalah perbuatan terpuji." },
-  { q: "Anak yang menyayangi sesama akan disukai ....", type: "isian", correct: ["Allah"], exp: "Allah menyukai anak yang menyayangi sesama." }
+  { q: "Nama-nama baik Allah disebut ....", type: "isian", correct: ["Asmaulhusna"], exp: "" },
+  { q: "Ar-Rahmān artinya Allah Maha ....", type: "isian", correct: ["Pengasih"], exp: "" },
+  { q: "Ar-Rahīm artinya Allah Maha ....", type: "isian", correct: ["Penyayang"], exp: "" },
+  { q: "Allah memberi kasih sayang kepada ... makhluk.", type: "isian", correct: ["semua"], exp: "" },
+  { q: "Menyayangi teman termasuk meneladani ....", type: "isian", correct: ["Ar-Rahmān", "Ar-Rahman"], exp: "" },
+  { q: "Jika teman tidak membawa pensil, sebaiknya kita ....", type: "isian", correct: ["meminjamkan"], exp: "" },
+  { q: "Memberi makan kucing adalah bentuk rasa ....", type: "isian", correct: ["sayang"], exp: "" },
+  { q: "Menyiram tanaman berarti merawat ....", type: "isian", correct: ["tumbuhan"], exp: "" },
+  { q: "Menolong teman yang jatuh termasuk perbuatan ....", type: "isian", correct: ["terpuji"], exp: "" },
+  { q: "Anak yang menyayangi sesama akan disukai ....", type: "isian", correct: ["Allah"], exp: "" }
 ],
 "1-akhlak1": [
   { q:"Ucapan yang kita baca sebelum memulai kegiatan baik adalah ....", correct:"Basmalah", wrong:["Hamdalah","Istighfar","Takbir"], exp:"Basmalah dibaca agar kegiatan kita mendapat berkah dari Allah." },
@@ -399,16 +405,16 @@ const DEFAULT_BANK = {
   { q:"Anak yang selalu mengingat Allah akan mendapat ....", correct:"Pahala", wrong:["Hadiah uang","Mainan","Bintang"], exp:"Dzikir dan mengingat Allah akan mendatangkan pahala dari-Nya." },
   { q:"Membiasakan membaca Basmalah dan Hamdalah dilakukan ....", correct:"Setiap hari", wrong:["Sekali saja","Saat ulangan saja","Saat sedih saja"], exp:"Membaca Basmalah dan Hamdalah harus menjadi kebiasaan sehari-hari." },
   // Isian
-  { q: "Sebelum memulai kegiatan baik, kita membaca ....", type: "isian", correct: ["basmalah", "bismillah"], exp: "Basmalah dibaca sebelum memulai kebaikan." },
-  { q: "Setelah selesai kegiatan, kita membaca ....", type: "isian", correct: ["hamdalah", "alhamdulillah"], exp: "Hamdalah dibaca setelah selesai kegiatan." },
-  { q: "“Bismillāhir-raḥmānir-raḥīm” artinya dengan nama ....", type: "isian", correct: ["Allah"], exp: "Basmalah berarti dengan nama Allah." },
-  { q: "“Alḥamdulillāh” artinya segala puji bagi ....", type: "isian", correct: ["Allah"], exp: "Hamdalah berarti segala puji bagi Allah." },
-  { q: "Sebelum makan, kita membaca ....", type: "isian", correct: ["basmalah", "bismillah"], exp: "Membaca basmalah sebelum makan." },
-  { q: "Setelah makan, kita membaca ....", type: "isian", correct: ["hamdalah", "alhamdulillah"], exp: "Membaca hamdalah setelah makan." },
-  { q: "Sebelum tidur, kita membaca ....", type: "isian", correct: ["basmalah", "bismillah", "doa"], exp: "Membaca basmalah/doa sebelum tidur." },
-  { q: "Bangun tidur, kita membaca ....", type: "isian", correct: ["hamdalah", "alhamdulillah"], exp: "Membaca hamdalah saat bangun tidur." },
-  { q: "Basmalah dan hamdalah adalah akhlak kepada ....", type: "isian", correct: ["Allah"], exp: "Basmalah dan hamdalah adalah akhlak kepada Allah." },
-  { q: "Mengucapkan hamdalah adalah tanda ....", type: "isian", correct: ["syukur", "bersyukur"], exp: "Hamdalah adalah tanda syukur." }
+  { q: "Sebelum memulai kegiatan baik, kita membaca ....", type: "isian", correct: ["basmalah"], exp: "" },
+  { q: "Setelah selesai kegiatan, kita membaca ....", type: "isian", correct: ["hamdalah"], exp: "" },
+  { q: "“Bismillāhir-raḥmānir-raḥīm” artinya dengan nama ....", type: "isian", correct: ["Allah"], exp: "" },
+  { q: "“Alḥamdulillāh” artinya segala puji bagi ....", type: "isian", correct: ["Allah"], exp: "" },
+  { q: "Sebelum makan, kita membaca ....", type: "isian", correct: ["basmalah"], exp: "" },
+  { q: "Setelah makan, kita membaca ....", type: "isian", correct: ["hamdalah"], exp: "" },
+  { q: "Sebelum tidur, kita membaca ....", type: "isian", correct: ["basmalah"], exp: "" },
+  { q: "Bangun tidur, kita membaca ....", type: "isian", correct: ["hamdalah"], exp: "" },
+  { q: "Basmalah dan hamdalah adalah akhlak kepada ....", type: "isian", correct: ["Allah"], exp: "" },
+  { q: "Mengucapkan hamdalah adalah tanda ....", type: "isian", correct: ["syukur"], exp: "" }
 ],
 "1-fikih1": [
   { q:"Rukun Islam adalah tiang atau dasar agama ....", correct:"Islam", wrong:["Kristen","Hindu","Buddha"], exp:"Rukun Islam adalah pondasi utama agama Islam." },
@@ -432,16 +438,16 @@ const DEFAULT_BANK = {
   { q:"Berbagi makanan dengan teman di sekolah adalah contoh meneladani rukun ....", correct:"Zakat", wrong:["Puasa","Haji","Salat"], exp:"Berbagi rezeki adalah salah satu hikmah dari zakat dan sedekah." },
   { q:"Jika kita rajin menjalankan Rukun Islam, kita akan menjadi anak yang ....", correct:"Taat kepada Allah", wrong:["Sombong","Malas","Nakal"], exp:"Menjalankan Rukun Islam adalah wujud ketaatan kita kepada Allah Swt." },
   // Isian
-  { q: "Rukun Islam ada ....", type: "isian", correct: ["5", "lima"], exp: "Rukun Islam ada 5." },
-  { q: "Rukun Islam pertama adalah ....", type: "isian", correct: ["syahadat"], exp: "Rukun Islam pertama adalah syahadat." },
-  { q: "Rukun Islam kedua adalah ....", type: "isian", correct: ["salat", "sholat"], exp: "Rukun Islam kedua adalah salat." },
-  { q: "Rukun Islam ketiga adalah ....", type: "isian", correct: ["zakat"], exp: "Rukun Islam ketiga adalah zakat." },
-  { q: "Rukun Islam keempat adalah ....", type: "isian", correct: ["puasa"], exp: "Rukun Islam keempat adalah puasa." },
-  { q: "Rukun Islam kelima adalah ....", type: "isian", correct: ["haji"], exp: "Rukun Islam kelima adalah haji." },
-  { q: "Dua kalimat syahadat disebut ....", type: "isian", correct: ["syahadatain"], exp: "Dua kalimat syahadat disebut syahadatain." },
-  { q: "Salat wajib dalam sehari semalam ada ... waktu.", type: "isian", correct: ["5", "lima"], exp: "Salat wajib ada 5 waktu." },
-  { q: "Puasa wajib dilakukan pada bulan ....", type: "isian", correct: ["Ramadan", "Ramadhan"], exp: "Puasa wajib dilakukan pada bulan Ramadan." },
-  { q: "Haji dilaksanakan di kota ....", type: "isian", correct: ["Mekah", "Makkah"], exp: "Haji dilaksanakan di kota Mekah." }
+  { q: "Rukun Islam ada ....", type: "isian", correct: ["5", "lima"], exp: "" },
+  { q: "Rukun Islam pertama adalah ....", type: "isian", correct: ["syahadat"], exp: "" },
+  { q: "Rukun Islam kedua adalah ....", type: "isian", correct: ["salat"], exp: "" },
+  { q: "Rukun Islam ketiga adalah ....", type: "isian", correct: ["zakat"], exp: "" },
+  { q: "Rukun Islam keempat adalah ....", type: "isian", correct: ["puasa"], exp: "" },
+  { q: "Rukun Islam kelima adalah ....", type: "isian", correct: ["haji"], exp: "" },
+  { q: "Dua kalimat syahadat disebut ....", type: "isian", correct: ["syahadatain"], exp: "" },
+  { q: "Salat wajib dalam sehari semalam ada ... waktu.", type: "isian", correct: ["5", "lima"], exp: "" },
+  { q: "Puasa wajib dilakukan pada bulan ....", type: "isian", correct: ["Ramadan"], exp: "" },
+  { q: "Haji dilaksanakan di kota ....", type: "isian", correct: ["Mekah"], exp: "" }
 ],
 "1-spi1": [
   { q:"Manusia pertama yang diciptakan oleh Allah Swt. adalah ....", correct:"Nabi Adam a.s.", wrong:["Nabi Nuh a.s.","Nabi Muhammad SAW","Nabi Ibrahim a.s."], exp:"Nabi Adam a.s. adalah manusia dan nabi pertama." },
@@ -465,16 +471,16 @@ const DEFAULT_BANK = {
   { q:"Berani mengakui kesalahan adalah tanda anak yang ....", correct:"Jujur", wrong:["Sombong","Penakut","Malas"], exp:"Anak jujur tidak takut mengakui kesalahannya karena tahu itu perbuatan benar." },
   { q:"Meneladani Nabi Adam a.s. berarti kita harus selalu ....", correct:"Taat kepada Allah Swt.", wrong:["Melanggar aturan","Bermain terus","Malas belajar"], exp:"Ketaatan Nabi Adam setelah bertaubat adalah pelajaran berharga bagi kita." },
   // Isian
-  { q: "Manusia pertama yang diciptakan Allah adalah Nabi ....", type: "isian", correct: ["Adam"], exp: "Manusia pertama adalah Nabi Adam." },
-  { q: "Nabi Adam a.s. diciptakan dari ....", type: "isian", correct: ["tanah"], exp: "Nabi Adam diciptakan dari tanah." },
-  { q: "Istri Nabi Adam a.s. bernama Siti ....", type: "isian", correct: ["Hawa"], exp: "Istri Nabi Adam bernama Siti Hawa." },
-  { q: "Sebelum turun ke bumi, Nabi Adam dan Hawa tinggal di ....", type: "isian", correct: ["surga"], exp: "Mereka tinggal di surga sebelum diturunkan ke bumi." },
-  { q: "Makhluk sombong yang tidak mau sujud kepada Nabi Adam adalah ....", type: "isian", correct: ["iblis"], exp: "Iblis sombong dan tidak mau sujud." },
-  { q: "Pohon yang dilarang bagi Nabi Adam dan Hawa adalah pohon ....", type: "isian", correct: ["Khuldi"], exp: "Pohon Khuldi adalah pohon yang dilarang." },
-  { q: "Setelah berbuat salah, Nabi Adam segera ....", type: "isian", correct: ["bertaubat", "taubat"], exp: "Nabi Adam segera bertaubat." },
-  { q: "Nabi Adam dan Hawa diturunkan ke ....", type: "isian", correct: ["bumi"], exp: "Mereka diturunkan ke bumi." },
-  { q: "Berani mengakui kesalahan termasuk sikap ....", type: "isian", correct: ["jujur"], exp: "Mengakui kesalahan adalah sikap jujur." },
-  { q: "Meneladani Nabi Adam berarti taat kepada ....", type: "isian", correct: ["Allah"], exp: "Kita harus taat kepada Allah." }
+  { q: "Manusia pertama yang diciptakan Allah adalah Nabi ....", type: "isian", correct: ["Adam"], exp: "" },
+  { q: "Nabi Adam a.s. diciptakan dari ....", type: "isian", correct: ["tanah"], exp: "" },
+  { q: "Istri Nabi Adam a.s. bernama Siti ....", type: "isian", correct: ["Hawa"], exp: "" },
+  { q: "Sebelum turun ke bumi, Nabi Adam dan Hawa tinggal di ....", type: "isian", correct: ["surga"], exp: "" },
+  { q: "Makhluk sombong yang tidak mau sujud kepada Nabi Adam adalah ....", type: "isian", correct: ["iblis"], exp: "" },
+  { q: "Pohon yang dilarang bagi Nabi Adam dan Hawa adalah pohon ....", type: "isian", correct: ["Khuldi"], exp: "" },
+  { q: "Setelah berbuat salah, Nabi Adam segera ....", type: "isian", correct: ["bertaubat"], exp: "" },
+  { q: "Nabi Adam dan Hawa diturunkan ke ....", type: "isian", correct: ["bumi"], exp: "" },
+  { q: "Berani mengakui kesalahan termasuk sikap ....", type: "isian", correct: ["jujur"], exp: "" },
+  { q: "Meneladani Nabi Adam berarti taat kepada ....", type: "isian", correct: ["Allah"], exp: "" }
 ],
 
 /* ================= KELAS 2 ================= */
@@ -498,7 +504,18 @@ const DEFAULT_BANK = {
   { q:"Jumlah huruf hijaiah utama ada ...", correct:"29 huruf", wrong:["28 huruf","30 huruf","31 huruf"], exp:"Huruf hijaiah berjumlah 29." },
   { q:"Huruf م pada kata مَلِكِ terletak di posisi ...", correct:"Awal", wrong:["Tengah","Akhir","Terpisah"], exp:"Huruf mim berada di awal kata." },
   { q:"Surah An-Nas diturunkan di kota ...", correct:"Mekah", wrong:["Madinah","Mesir","Palestina"], exp:"Surah An-Nas adalah surah Makkiyah (diturunkan di Mekah)." },
-  { q:"Membaca Surah An-Nas sebelum tidur bertujuan untuk ...", correct:"Mendapat perlindungan Allah", wrong:["Cepat kaya","Bisa terbang","Mendapat nilai bagus"], exp:"Membacanya sebagai doa perlindungan dari gangguan setan." }
+  { q:"Membaca Surah An-Nas sebelum tidur bertujuan untuk ...", correct:"Mendapat perlindungan Allah", wrong:["Cepat kaya","Bisa terbang","Mendapat nilai bagus"], exp:"Membacanya sebagai doa perlindungan dari gangguan setan." },
+  // Isian
+  { q: "Surah An-Nas artinya ....", type: "isian", correct: ["Manusia"], exp: "" },
+  { q: "Surah An-Nas terdiri dari ... ayat.", type: "isian", correct: ["6", "enam"], exp: "" },
+  { q: "Surah An-Nas menempati urutan ke-... dalam Al-Qur'an.", type: "isian", correct: ["114", "seratus empat belas"], exp: "" },
+  { q: "Lafal <span class='ar'>النَّاسِ</span> artinya ....", type: "isian", correct: ["manusia"], exp: "" },
+  { q: "Lafal <span class='ar'>قُلْ</span> artinya ....", type: "isian", correct: ["katakanlah"], exp: "" },
+  { q: "Surah An-Nas diturunkan di kota ....", type: "isian", correct: ["Makkah"], exp: "" },
+  { q: "Surah An-Nas tergolong surah ....", type: "isian", correct: ["Makkiyah"], exp: "" },
+  { q: "Lafal <span class='ar'>مَلِكِ النَّاسِ</span> artinya Raja ....", type: "isian", correct: ["manusia"], exp: "" },
+  { q: "Lafal <span class='ar'>إِلٰهِ النَّاسِ</span> artinya Tuhan ....", type: "isian", correct: ["manusia"], exp: "" },
+  { q: "Kita berlindung hanya kepada ....", type: "isian", correct: ["Allah"], exp: "" }
 ],
 "2-akidah1": [
   { q:"Arti kata 'Al-Husna' adalah ...", correct:"Baik", wrong:["Nama","Indah","Suci"], exp:"Al-Husna artinya yang terbaik atau yang baik." },
@@ -520,7 +537,18 @@ const DEFAULT_BANK = {
   { q:"Saat merasa takut, kita dianjurkan berzikir menyebut nama Allah ...", correct:"Al-Mu'min", wrong:["Al-Malik","Al-Quddus","As-Salam"], exp:"Al-Mu'min memberi rasa aman dari rasa takut." },
   { q:"Surah Al-Fath ayat 4 menjelaskan bahwa Allah menurunkan ketenangan ke dalam hati orang-orang ...", correct:"Mukmin", wrong:["Kafir","Munafik","Fasik"], exp:"Allah menurunkan ketenangan (sakinah) ke dalam hati orang-orang mukmin." },
   { q:"Mengamalkan asmaul husna Al-Mu'min dapat dilakukan dengan cara ...", correct:"Menjaga ketertiban", wrong:["Membuat kegaduhan","Membuang sampah sembarangan","Melanggar aturan sekolah"], exp:"Menjaga ketertiban menciptakan rasa aman (Al-Mu'min)." },
-  { q:"Patuh kepada orang tua dan guru adalah salah satu wujud meneladani sifat ...", correct:"Al-Malik", wrong:["Al-Quddus","As-Salam","Al-Mu'min"], exp:"Ketaatan pada aturan mencerminkan sifat Al-Malik (Maha Mengatur)." }
+  { q:"Patuh kepada orang tua dan guru adalah salah satu wujud meneladani sifat ...", correct:"Al-Malik", wrong:["Al-Quddus","As-Salam","Al-Mu'min"], exp:"Ketaatan pada aturan mencerminkan sifat Al-Malik (Maha Mengatur)." },
+  // Isian
+  { q: "Nama-nama baik Allah disebut ....", type: "isian", correct: ["Asmaulhusna"], exp: "" },
+  { q: "Al-Khaliq artinya Allah Maha ....", type: "isian", correct: ["Pencipta"], exp: "" },
+  { q: "Al-Malik artinya Allah Maha ....", type: "isian", correct: ["Merajai"], exp: "" },
+  { q: "Al-Quddus artinya Allah Maha ....", type: "isian", correct: ["Suci"], exp: "" },
+  { q: "Allah menciptakan manusia dan alam semesta. Ini menunjukkan sifat ....", type: "isian", correct: ["Al-Khaliq"], exp: "" },
+  { q: "Allah Maha Suci dari segala kekurangan. Ini menunjukkan sifat ....", type: "isian", correct: ["Al-Quddus"], exp: "" },
+  { q: "Bumi, langit, dan isinya adalah milik Allah. Ini menunjukkan sifat ....", type: "isian", correct: ["Al-Malik"], exp: "" },
+  { q: "Menjaga kebersihan diri adalah meneladani sifat ....", type: "isian", correct: ["Al-Quddus"], exp: "" },
+  { q: "Merawat tumbuhan dan hewan adalah bentuk syukur atas sifat ....", type: "isian", correct: ["Al-Khaliq"], exp: "" },
+  { q: "Jumlah Asmaul Husna yang wajib diketahui ada ....", type: "isian", correct: ["99", "sembilan puluh sembilan"], exp: "" }
 ],
 "2-akhlak1": [
   { q:"Kalimat thayyibah artinya ...", correct:"Ucapan yang baik", wrong:["Perbuatan baik","Harta yang banyak","Ilmu yang luas"], exp:"Thayyibah berarti baik, kalimat thayyibah adalah ucapan yang baik." },
@@ -542,7 +570,18 @@ const DEFAULT_BANK = {
   { q:"Jika kita sering berzikir dengan kalimat thayyibah, hati kita akan merasa ...", correct:"Tenang", wrong:["Gelisah","Sedih","Marah"], exp:"Dzikir menenangkan hati." },
   { q:"Subhanallah menunjukkan bahwa Allah Maha ...", correct:"Sempurna", wrong:["Lemah","Butuh makan","Tidur"], exp:"Allah Maha Sempurna, jauh dari kekurangan." },
   { q:"Ucapan MasyaAllah juga mencegah kita dari sifat ...", correct:"Sombong", wrong:["Dermawan","Jujur","Sabar"], exp:"Menyadari semua atas kehendak Allah mencegah kesombongan." },
-  { q:"Dengan mengucapkan MasyaAllah, kita mengakui bahwa keindahan itu terjadi atas ...", correct:"Kehendak Allah", wrong:["Kehendak manusia","Kekuatan setan","Bantuan malaikat"], exp:"Segala sesuatu terjadi atas kehendak Allah." }
+  { q:"Dengan mengucapkan MasyaAllah, kita mengakui bahwa keindahan itu terjadi atas ...", correct:"Kehendak Allah", wrong:["Kehendak manusia","Kekuatan setan","Bantuan malaikat"], exp:"Segala sesuatu terjadi atas kehendak Allah." },
+  // Isian
+  { q: "Berbicara sesuai kenyataan disebut ....", type: "isian", correct: ["jujur"], exp: "" },
+  { q: "Perbuatan tidak jujur disebut ....", type: "isian", correct: ["bohong"], exp: "" },
+  { q: "Anak yang jujur akan disukai oleh ....", type: "isian", correct: ["Allah"], exp: "" },
+  { q: "Berbicara kepada orang tua harus ....", type: "isian", correct: ["sopan"], exp: "" },
+  { q: "Berbicara kepada guru harus ....", type: "isian", correct: ["sopan"], exp: "" },
+  { q: "Jika melakukan kesalahan, kita harus meminta ....", type: "isian", correct: ["maaf"], exp: "" },
+  { q: "Anak yang jujur selalu berkata ....", type: "isian", correct: ["benar"], exp: "" },
+  { q: "Mendengarkan nasihat guru termasuk sikap ....", type: "isian", correct: ["patuh"], exp: "" },
+  { q: "Kebalikan dari sikap sopan adalah ....", type: "isian", correct: ["kasar"], exp: "" },
+  { q: "Berbohong adalah perbuatan ....", type: "isian", correct: ["tercela"], exp: "" }
 ],
 "2-fikih1": [
   { q:"Salat yang wajib dikerjakan umat Islam disebut salat ...", correct:"Fardu", wrong:["Sunah","Rawatib","Tahajud"], exp:"Salat wajib disebut salat fardu." },
@@ -564,7 +603,18 @@ const DEFAULT_BANK = {
   { q:"Salat Magrib terdiri dari ... rakaat.", correct:"3", wrong:["2","4","5"], exp:"Magrib terdiri dari 3 rakaat." },
   { q:"Salat Subuh terdiri dari ... rakaat.", correct:"2", wrong:["3","4","5"], exp:"Subuh terdiri dari 2 rakaat." },
   { q:"Duduk di antara dua sujud disebut duduk ...", correct:"Iftirasy", wrong:["Tawaruk","Tahiyat","Bersila"], exp:"Duduk antara dua sujud disebut iftirasy." },
-  { q:"Saat salam, kita menoleh ke arah ...", correct:"Kanan dan kiri", wrong:["Kanan saja","Kiri saja","Atas"], exp:"Salam dilakukan dengan menoleh ke kanan lalu ke kiri." }
+  { q:"Saat salam, kita menoleh ke arah ...", correct:"Kanan dan kiri", wrong:["Kanan saja","Kiri saja","Atas"], exp:"Salam dilakukan dengan menoleh ke kanan lalu ke kiri." },
+  // Isian
+  { q: "Salat wajib dalam sehari semalam ada ... waktu.", type: "isian", correct: ["5", "lima"], exp: "" },
+  { q: "Bersuci sebelum salat disebut ....", type: "isian", correct: ["wudu"], exp: "" },
+  { q: "Salat dimulai dengan takbiratul ....", type: "isian", correct: ["ihram"], exp: "" },
+  { q: "Salat diakhiri dengan ....", type: "isian", correct: ["salam"], exp: "" },
+  { q: "Saat salat, kita menghadap ke arah ....", type: "isian", correct: ["kiblat"], exp: "" },
+  { q: "Salat yang dikerjakan bersama-sama disebut ....", type: "isian", correct: ["berjamaah"], exp: "" },
+  { q: "Salat Subuh terdiri dari ... rakaat.", type: "isian", correct: ["2", "dua"], exp: "" },
+  { q: "Salat Maghrib terdiri dari ... rakaat.", type: "isian", correct: ["3", "tiga"], exp: "" },
+  { q: "Salat Isya terdiri dari ... rakaat.", type: "isian", correct: ["4", "empat"], exp: "" },
+  { q: "Membasuh muka adalah salah satu rukun ....", type: "isian", correct: ["wudu"], exp: "" }
 ],
 "2-spi1": [
   { q:"Nabi Ibrahim a.s. dijuluki sebagai ...", correct:"Bapak Para Nabi", wrong:["Nabi Terakhir","Raja Dunia","Manusia Pertama"], exp:"Nabi Ibrahim dijuluki Abul Anbiya (Bapak Para Nabi)." },
@@ -587,17 +637,17 @@ const DEFAULT_BANK = {
   { q:"Keberanian Nabi Ibrahim a.s. menghadapi Raja Namrud patut kita ...", correct:"Tiru", wrong:["Tinggalkan","Lupakan","Hindari"], exp:"Keberanian membela kebenaran harus ditiru." },
   { q:"Kasih sayang Nabi Ibrahim a.s. kepada putranya ditunjukkan dengan ...", correct:"Menyayangi dan mendidik", wrong:["Menyakiti","Membenci","Menelantarkan"], exp:"Nabi Ibrahim mendidik putranya dengan penuh kasih sayang." },
   { q:"Mimpi Nabi Ibrahim a.s. menyembelih putranya merupakan ... dari Allah.", correct:"Ujian", wrong:["Hukuman","Hadiah","Azab"], exp:"Itu adalah ujian berat dari Allah untuk menguji ketaatan." },
-  // Isian Kelas 2 Bab 5
-  { q: "Nabi Ibrahim a.s. termasuk rasul bergelar ....", type: "isian", correct: ["Ulul Azmi"], exp: "Nabi Ibrahim bergelar Ulul Azmi." },
-  { q: "Nabi Ibrahim dijuluki sebagai Bapak Para ....", type: "isian", correct: ["Nabi"], exp: "Nabi Ibrahim dijuluki Bapak Para Nabi." },
-  { q: "Ayah Nabi Ibrahim a.s. bernama ....", type: "isian", correct: ["Azar"], exp: "Ayah Nabi Ibrahim bernama Azar." },
-  { q: "Raja zalim yang membakar Nabi Ibrahim adalah ....", type: "isian", correct: ["Namrud"], exp: "Raja zalim tersebut adalah Namrud." },
-  { q: "Mukjizat Nabi Ibrahim saat dibakar adalah api menjadi ....", type: "isian", correct: ["dingin"], exp: "Api menjadi dingin atas perintah Allah." },
-  { q: "Hewan yang menggantikan Nabi Ismail saat akan disembelih adalah ....", type: "isian", correct: ["domba", "kambing"], exp: "Allah menggantinya dengan domba." },
-  { q: "Nabi Ibrahim dan Nabi Ismail membangun ....", type: "isian", correct: ["Ka'bah", "Kabah"], exp: "Mereka membangun Ka'bah." },
-  { q: "Saat mencari Tuhan, Nabi Ibrahim melihat bintang, bulan, dan ....", type: "isian", correct: ["matahari"], exp: "Nabi Ibrahim juga melihat matahari." },
-  { q: "Nabi Ismail rela disembelih karena ... kepada Allah.", type: "isian", correct: ["taat", "patuh"], exp: "Nabi Ismail sangat taat kepada Allah." },
-  { q: "Kisah penggantian Nabi Ismail diperingati sebagai Hari Raya ....", type: "isian", correct: ["Idul Adha"], exp: "Diperingati sebagai Hari Raya Idul Adha." }
+  // Isian Baru
+  { q: "Nabi Ibrahim a.s. termasuk rasul bergelar ....", type: "isian", correct: ["Ulul Azmi"], exp: "" },
+  { q: "Nabi Ibrahim dijuluki sebagai Bapak Para ....", type: "isian", correct: ["Nabi"], exp: "" },
+  { q: "Ayah Nabi Ibrahim a.s. bernama ....", type: "isian", correct: ["Azar"], exp: "" },
+  { q: "Raja zalim yang membakar Nabi Ibrahim adalah ....", type: "isian", correct: ["Namrud"], exp: "" },
+  { q: "Mukjizat Nabi Ibrahim saat dibakar adalah api menjadi ....", type: "isian", correct: ["dingin"], exp: "" },
+  { q: "Hewan yang menggantikan Nabi Ismail saat akan disembelih adalah ....", type: "isian", correct: ["domba"], exp: "" },
+  { q: "Nabi Ibrahim dan Nabi Ismail membangun ....", type: "isian", correct: ["Ka’bah"], exp: "" },
+  { q: "Saat mencari Tuhan, Nabi Ibrahim melihat bintang, bulan, dan ....", type: "isian", correct: ["matahari"], exp: "" },
+  { q: "Nabi Ismail rela disembelih karena ... kepada Allah.", type: "isian", correct: ["taat"], exp: "" },
+  { q: "Kisah penggantian Nabi Ismail diperingati sebagai Hari Raya ....", type: "isian", correct: ["Idul Adha"], exp: "" }
 ],
 
 /* ================= KELAS 3 ================= */
@@ -622,17 +672,17 @@ const DEFAULT_BANK = {
   { q:"Surat Al-Fiil mengisahkan kekuasaan Allah yang bisa menghancurkan pasukan besar dengan...", correct:"Hewan kecil", wrong:["Senjata modern","Badai salju","Gempa bumi"], exp:"Allah menggunakan burung Ababil yang kecil untuk menghancurkan mereka." },
   { q:"Jika melihat teman yang sombong, sikap kita adalah...", correct:"Menasihati dengan baik", wrong:["Memukulnya","Mengejeknya","Menjauhinya"], exp:"Kita harus menasihati dengan cara yang baik." },
   { q:"Surah Al-Fiil adalah surah ke-... dalam Al-Qur'an.", correct:"105", wrong:["106","107","108"], exp:"Al-Fiil adalah surah ke-105." },
-  // Isian
-  { q: "Surat <span class='ar'>الْفِيلِ</span> menceritakan pasukan ....", type: "isian", correct: ["gajah"], exp: "Al-Fiil menceritakan pasukan gajah." },
-  { q: "Lafal <span class='ar'>الْفِيلِ</span> artinya ....", type: "isian", correct: ["gajah"], exp: "Al-Fiil artinya gajah." },
-  { q: "Surat Al-Fiil terdiri dari ... ayat.", type: "isian", correct: ["5", "lima"], exp: "Al-Fiil terdiri dari 5 ayat." },
-  { q: "Raja pemimpin pasukan bergajah adalah ....", type: "isian", correct: ["Abrahah"], exp: "Raja tersebut bernama Abrahah." },
-  { q: "Abrahah ingin menghancurkan ....", type: "isian", correct: ["Ka'bah", "Kabah"], exp: "Abrahah ingin menghancurkan Ka'bah." },
-  { q: "Allah mengirim burung <span class='ar'>طَيْرًا أَبَابِيلَ</span> yang berarti burung ....", type: "isian", correct: ["Ababil"], exp: "Burung tersebut adalah burung Ababil." },
-  { q: "Lafal <span class='ar'>كَعَصْفٍ مَأْكُولٍ</span> artinya seperti daun dimakan ....", type: "isian", correct: ["ulat"], exp: "Artinya seperti daun dimakan ulat." },
-  { q: "Lafal <span class='ar'>تَرْمِيهِمْ بِحِجَارَةٍ</span> mengandung hukum bacaan ....", type: "isian", correct: ["Ikhfa Syafawi", "Ikhfa"], exp: "Mim sukun bertemu ba adalah Ikhfa Syafawi." },
-  { q: "Lafal <span class='ar'>لَهُمْ مَا</span> mengandung hukum bacaan ....", type: "isian", correct: ["Idgham Mimi", "Idgham Bighunnah"], exp: "Mim sukun bertemu mim adalah Idgham Mimi." },
-  { q: "Surat Al-Fiil adalah surah ke-....", type: "isian", correct: ["105"], exp: "Al-Fiil adalah surah ke-105." }
+  // Isian Baru
+  { q: "Surat <span class='ar'>الْفِيلِ</span> menceritakan pasukan ....", type: "isian", correct: ["gajah"], exp: "" },
+  { q: "Lafal <span class='ar'>الْفِيلِ</span> artinya ....", type: "isian", correct: ["gajah"], exp: "" },
+  { q: "Surat Al-Fiil terdiri dari ... ayat.", type: "isian", correct: ["5", "lima"], exp: "" },
+  { q: "Raja pemimpin pasukan bergajah adalah ....", type: "isian", correct: ["Abrahah"], exp: "" },
+  { q: "Abrahah ingin menghancurkan ....", type: "isian", correct: ["Ka’bah"], exp: "" },
+  { q: "Allah mengirim burung <span class='ar'>طَيْرًا أَبَابِيلَ</span> yang berarti burung ....", type: "isian", correct: ["Ababil"], exp: "" },
+  { q: "Lafal <span class='ar'>كَعَصْفٍ مَأْكُولٍ</span> artinya seperti daun dimakan ....", type: "isian", correct: ["ulat"], exp: "" },
+  { q: "Lafal <span class='ar'>تَرْمِيهِمْ بِحِجَارَةٍ</span> mengandung hukum bacaan ....", type: "isian", correct: ["Ikhfa Syafawi"], exp: "" },
+  { q: "Lafal <span class='ar'>لَهُمْ مَا</span> mengandung hukum bacaan ....", type: "isian", correct: ["Idgham Mimi"], exp: "" },
+  { q: "Surat Al-Fiil adalah surah ke-....", type: "isian", correct: ["105", "seratus lima"], exp: "" }
 ],
 "3-akidah1": [
   { q:"Sifat yang pasti dimiliki Allah disebut sifat...", correct:"Wajib", wrong:["Mustahil","Jaiz","Sunah"], exp:"Sifat wajib adalah sifat yang pasti ada pada Allah." },
@@ -655,17 +705,17 @@ const DEFAULT_BANK = {
   { q:"Sifat mustahil bagi Allah jumlahnya ada...", correct:"20", wrong:["10","15","25"], exp:"Sifat mustahil Allah ada 20, kebalikan dari sifat wajib." },
   { q:"Sifat jaiz bagi Allah jumlahnya ada...", correct:"1", wrong:["2","3","4"], exp:"Sifat jaiz Allah hanya ada 1, yaitu kebebasan berbuat." },
   { q:"Sifat mustahil dari 'Wujud' (Ada) adalah...", correct:"'Adam (Tidak Ada)", wrong:["Fana' (Rusak)","Huduts (Baru)","Mautun (Mati)"], exp:"Kebalikan dari Ada adalah Tidak Ada ('Adam)." },
-  // Isian
-  { q: "Sifat yang pasti dimiliki Allah disebut sifat ....", type: "isian", correct: ["wajib"], exp: "Sifat yang pasti dimiliki Allah disebut sifat wajib." },
-  { q: "Sifat yang tidak mungkin ada pada Allah disebut sifat ....", type: "isian", correct: ["mustahil"], exp: "Sifat yang tidak mungkin ada pada Allah disebut sifat mustahil." },
-  { q: "Sifat bebas bagi Allah disebut sifat ....", type: "isian", correct: ["jaiz"], exp: "Sifat bebas bagi Allah disebut sifat jaiz." },
-  { q: "Sifat Allah “Ada” disebut ....", type: "isian", correct: ["Wujud"], exp: "Sifat Allah Ada disebut Wujud." },
-  { q: "Sifat Allah “Terdahulu” disebut ....", type: "isian", correct: ["Qidam"], exp: "Sifat Allah Terdahulu disebut Qidam." },
-  { q: "Sifat Allah “Kekal” disebut ....", type: "isian", correct: ["Baqa'", "Baqa"], exp: "Sifat Allah Kekal disebut Baqa'." },
-  { q: "Sifat Allah “Maha Esa” disebut ....", type: "isian", correct: ["Wahdaniyah"], exp: "Sifat Allah Maha Esa disebut Wahdaniyah." },
-  { q: "Sifat Allah “Maha Kuasa” disebut ....", type: "isian", correct: ["Qudrat"], exp: "Sifat Allah Maha Kuasa disebut Qudrat." },
-  { q: "Sifat Allah “Maha Mengetahui” disebut ....", type: "isian", correct: ["Ilmu"], exp: "Sifat Allah Maha Mengetahui disebut Ilmu." },
-  { q: "Sifat Allah “Maha Mendengar” disebut ....", type: "isian", correct: ["Sam'un", "Samun"], exp: "Sifat Allah Maha Mendengar disebut Sam'un." }
+  // Isian Baru
+  { q: "Sifat yang pasti dimiliki Allah disebut sifat ....", type: "isian", correct: ["wajib"], exp: "" },
+  { q: "Sifat yang tidak mungkin ada pada Allah disebut sifat ....", type: "isian", correct: ["mustahil"], exp: "" },
+  { q: "Sifat bebas bagi Allah disebut sifat ....", type: "isian", correct: ["jaiz"], exp: "" },
+  { q: "Sifat Allah “Ada” disebut ....", type: "isian", correct: ["Wujud"], exp: "" },
+  { q: "Sifat Allah “Terdahulu” disebut ....", type: "isian", correct: ["Qidam"], exp: "" },
+  { q: "Sifat Allah “Kekal” disebut ....", type: "isian", correct: ["Baqa’"], exp: "" },
+  { q: "Sifat Allah “Maha Esa” disebut ....", type: "isian", correct: ["Wahdaniyah"], exp: "" },
+  { q: "Sifat Allah “Maha Kuasa” disebut ....", type: "isian", correct: ["Qudrat"], exp: "" },
+  { q: "Sifat Allah “Maha Mengetahui” disebut ....", type: "isian", correct: ["Ilmu"], exp: "" },
+  { q: "Sifat Allah “Maha Mendengar” disebut ....", type: "isian", correct: ["Sam’un"], exp: "" }
 ],
 "3-akhlak1": [
   { q:"Berprasangka baik disebut...", correct:"Husnudzan", wrong:["Su'udzan","Tawaduk","Takabur"], exp:"Husnudzan artinya berprasangka baik." },
@@ -688,17 +738,17 @@ const DEFAULT_BANK = {
   { q:"Contoh husnudzan kepada orang lain di rumah adalah berprasangka baik kepada...", correct:"Kakak/adik", wrong:["Tetangga jauh","Orang tak dikenal","Pembantu"], exp:"Mulailah husnudzan dari keluarga sendiri." },
   { q:"Sebelum menuduh teman mengambil pensilmu, sebaiknya kita...", correct:"Mencari dulu dengan teliti", wrong:["Langsung memarahinya","Melaporkan ke polisi","Menangis"], exp:"Cari dulu agar tidak berburuk sangka." },
   { q:"Berprasangka buruk atau su'udzan hukumnya...", correct:"Dilarang", wrong:["Dianjurkan","Wajib","Sunah"], exp:"Islam melarang berburuk sangka." },
-  // Isian
-  { q: "Berprasangka baik disebut ....", type: "isian", correct: ["husnudzan", "husnuzan"], exp: "Berprasangka baik disebut husnudzan." },
-  { q: "Lawan husnudzan adalah ....", type: "isian", correct: ["su'udzan", "suudzan"], exp: "Lawan husnudzan adalah su'udzan." },
-  { q: "Kata “husnu” artinya ....", type: "isian", correct: ["baik"], exp: "Husnu artinya baik." },
-  { q: "Kata “zan” artinya ....", type: "isian", correct: ["dugaan", "sangkaan"], exp: "Zan artinya dugaan." },
-  { q: "Berprasangka baik kepada Allah membuat hati ....", type: "isian", correct: ["tenang"], exp: "Husnudzan kepada Allah membuat hati tenang." },
-  { q: "Saat tertimpa musibah, kita harus ....", type: "isian", correct: ["sabar"], exp: "Saat tertimpa musibah kita harus sabar." },
-  { q: "Berprasangka buruk hukumnya ....", type: "isian", correct: ["dilarang", "haram"], exp: "Berprasangka buruk dilarang." },
-  { q: "Iri dan dengki harus dibersihkan dari ....", type: "isian", correct: ["hati"], exp: "Iri dan dengki harus dibersihkan dari hati." },
-  { q: "Ketika gagal ujian, sikap husnudzan adalah ....", type: "isian", correct: ["bangkit", "belajar"], exp: "Sikap husnudzan adalah bangkit dan belajar." },
-  { q: "Memaafkan teman termasuk sikap ....", type: "isian", correct: ["terpuji"], exp: "Memaafkan adalah sikap terpuji." }
+  // Isian Baru
+  { q: "Berprasangka baik disebut ....", type: "isian", correct: ["husnudzan"], exp: "" },
+  { q: "Lawan husnudzan adalah ....", type: "isian", correct: ["su’udzan"], exp: "" },
+  { q: "Kata “husnu” artinya ....", type: "isian", correct: ["baik"], exp: "" },
+  { q: "Kata “zan” artinya ....", type: "isian", correct: ["dugaan"], exp: "" },
+  { q: "Berprasangka baik kepada Allah membuat hati ....", type: "isian", correct: ["tenang"], exp: "" },
+  { q: "Saat tertimpa musibah, kita harus ....", type: "isian", correct: ["sabar"], exp: "" },
+  { q: "Berprasangka buruk hukumnya ....", type: "isian", correct: ["dilarang"], exp: "" },
+  { q: "Iri dan dengki harus dibersihkan dari ....", type: "isian", correct: ["hati"], exp: "" },
+  { q: "Ketika gagal ujian, sikap husnudzan adalah ....", type: "isian", correct: ["bangkit"], exp: "" },
+  { q: "Memaafkan teman termasuk sikap ....", type: "isian", correct: ["terpuji"], exp: "" }
 ],
 "3-fikih1": [
   { q:"Secara bahasa, adzan artinya...", correct:"Seruan atau panggilan", wrong:["Larangan","Berdiri","Berdoa"], exp:"Adzan berarti panggilan atau seruan." },
@@ -721,17 +771,17 @@ const DEFAULT_BANK = {
   { q:"Hikmah dari adzan adalah melatih kita untuk...", correct:"Disiplin waktu", wrong:["Bermalas-malasan","Lupa waktu","Bermain terus"], exp:"Adzan mengajarkan kedisiplinan waktu salat." },
   { q:"Mendengarkan suara adzan yang merdu dapat membuat hati menjadi...", correct:"Tenang dan tenteram", wrong:["Gelisah","Sedih","Marah"], exp:"Adzan menenangkan hati umat Islam." },
   { q:"Masyarakat yang mendengar adzan akan berkumpul untuk...", correct:"Salat berjamaah", wrong:["Bermain bola","Berkelahi","Belanja"], exp:"Adzan memanggil untuk salat berjamaah." },
-  // Isian
-  { q: "Adzan artinya ....", type: "isian", correct: ["panggilan", "seruan"], exp: "Adzan artinya panggilan." },
-  { q: "Orang yang mengumandangkan adzan disebut ....", type: "isian", correct: ["muazin", "muadzin"], exp: "Orang yang adzan disebut muazin." },
-  { q: "Muazin pertama dalam Islam adalah ....", type: "isian", correct: ["Bilal", "Bilal bin Rabah"], exp: "Muazin pertama adalah Bilal bin Rabah." },
-  { q: "Hukum adzan sebelum salat fardu berjamaah adalah ....", type: "isian", correct: ["sunnah"], exp: "Hukum adzan adalah sunnah." },
-  { q: "Muazin disunahkan menghadap ....", type: "isian", correct: ["kiblat"], exp: "Muazin menghadap kiblat." },
-  { q: "Saat adzan, muazin menutup telinga dengan ....", type: "isian", correct: ["jari", "jari tangan"], exp: "Muazin menutup telinga dengan jari." },
-  { q: "Iqomah artinya ....", type: "isian", correct: ["dirikan", "tegakkan"], exp: "Iqomah artinya dirikan/tegakkan." },
-  { q: "Kalimat pembeda adzan dan iqomah adalah “qad qamatis ....”", type: "isian", correct: ["shalah", "shalat"], exp: "Qad qamatis shalah." },
-  { q: "Setelah adzan, kita membaca ....", type: "isian", correct: ["doa"], exp: "Setelah adzan kita membaca doa." },
-  { q: "Adzan subuh memiliki lafadz “ash-shalaatu khairum minan ....”", type: "isian", correct: ["naum", "naum."], exp: "Ash-shalaatu khairum minan naum." }
+  // Isian Baru
+  { q: "Adzan artinya ....", type: "isian", correct: ["panggilan"], exp: "" },
+  { q: "Orang yang mengumandangkan adzan disebut ....", type: "isian", correct: ["muazin"], exp: "" },
+  { q: "Muazin pertama dalam Islam adalah ....", type: "isian", correct: ["Bilal"], exp: "" },
+  { q: "Hukum adzan sebelum salat fardu berjamaah adalah ....", type: "isian", correct: ["sunnah"], exp: "" },
+  { q: "Muazin disunahkan menghadap ....", type: "isian", correct: ["kiblat"], exp: "" },
+  { q: "Saat adzan, muazin menutup telinga dengan ....", type: "isian", correct: ["jari"], exp: "" },
+  { q: "Iqomah artinya ....", type: "isian", correct: ["dirikan"], exp: "" },
+  { q: "Kalimat pembeda adzan dan iqomah adalah “qad qamatis ....”", type: "isian", correct: ["shalah"], exp: "" },
+  { q: "Setelah adzan, kita membaca ....", type: "isian", correct: ["doa"], exp: "" },
+  { q: "Adzan subuh memiliki lafadz “ash-shalaatu khairum minan ....”", type: "isian", correct: ["naum"], exp: "" }
 ],
 "3-spi1": [
   { q:"Nabi Muhammad SAW lahir pada tanggal...", correct:"12 Rabiul Awal", wrong:["17 Ramadhan","10 Dzulhijjah","1 Muharram"], exp:"Nabi lahir pada 12 Rabiul Awal Tahun Gajah." },
@@ -754,17 +804,17 @@ const DEFAULT_BANK = {
   { q:"Nabi Muhammad mulai berdagang bersama pamannya ke negeri...", correct:"Syam", wrong:["Mesir","Yaman","India"], exp:"Nabi berdagang ke Syam bersama Abu Thalib." },
   { q:"Kakek Nabi Muhammad sering mendudukkan Nabi di tempat khusus dekat...", correct:"Ka'bah", wrong:["Pasar","Istana","Kebun"], exp:"Kakeknya sangat menyayangi Nabi dan mendudukkannya di dekat Ka'bah." },
   { q:"Keluarga Nabi sangat menyayanginya, ini menunjukkan bahwa keluarga adalah...", correct:"Pelindung dan penyayang", wrong:["Tempat berpaling","Beban hidup","Penghalang"], exp:"Keluarga adalah pelindung dan penyayang." },
-  // Isian
-  { q: "Nabi Muhammad lahir tanggal 12 Rabiul ....", type: "isian", correct: ["Awal"], exp: "Nabi lahir tanggal 12 Rabiul Awal." },
-  { q: "Nabi Muhammad lahir pada tahun ....", type: "isian", correct: ["Gajah"], exp: "Nabi lahir pada Tahun Gajah." },
-  { q: "Ayah Nabi Muhammad bernama ....", type: "isian", correct: ["Abdullah"], exp: "Ayah Nabi bernama Abdullah." },
-  { q: "Ibu Nabi Muhammad bernama ....", type: "isian", correct: ["Aminah"], exp: "Ibu Nabi bernama Aminah." },
-  { q: "Ibu asuh Nabi Muhammad bernama Halimatus ....", type: "isian", correct: ["Sa'diyah", "Sadiyah"], exp: "Ibu asuh Nabi adalah Halimatus Sa'diyah." },
-  { q: "Kakek Nabi Muhammad bernama Abdul ....", type: "isian", correct: ["Muthalib", "Mutholib"], exp: "Kakek Nabi bernama Abdul Muthalib." },
-  { q: "Setelah kakek wafat, Nabi diasuh paman ....", type: "isian", correct: ["Abu Thalib", "Abu Tolib"], exp: "Nabi diasuh oleh pamannya Abu Thalib." },
-  { q: "Sejak kecil Nabi menggembala ....", type: "isian", correct: ["kambing"], exp: "Nabi menggembala kambing." },
-  { q: "Gelar Nabi karena jujur adalah ....", type: "isian", correct: ["Al-Amin", "Al Amin"], exp: "Nabi mendapat gelar Al-Amin." },
-  { q: "Nabi mulai berdagang ke negeri ....", type: "isian", correct: ["Syam"], exp: "Nabi berdagang ke negeri Syam." }
+  // Isian Baru
+  { q: "Nabi Muhammad lahir tanggal 12 Rabiul ....", type: "isian", correct: ["Awal"], exp: "" },
+  { q: "Nabi Muhammad lahir pada tahun ....", type: "isian", correct: ["Gajah"], exp: "" },
+  { q: "Ayah Nabi Muhammad bernama ....", type: "isian", correct: ["Abdullah"], exp: "" },
+  { q: "Ibu Nabi Muhammad bernama ....", type: "isian", correct: ["Aminah"], exp: "" },
+  { q: "Ibu asuh Nabi Muhammad bernama Halimatus ....", type: "isian", correct: ["Sa’diyah"], exp: "" },
+  { q: "Kakek Nabi Muhammad bernama Abdul ....", type: "isian", correct: ["Muthalib"], exp: "" },
+  { q: "Setelah kakek wafat, Nabi diasuh paman ....", type: "isian", correct: ["Abu Thalib"], exp: "" },
+  { q: "Sejak kecil Nabi menggembala ....", type: "isian", correct: ["kambing"], exp: "" },
+  { q: "Gelar Nabi karena jujur adalah ....", type: "isian", correct: ["Al-Amin"], exp: "" },
+  { q: "Nabi mulai berdagang ke negeri ....", type: "isian", correct: ["Syam"], exp: "" }
 ],
 
 /* ================= KELAS 4 ================= */
@@ -789,17 +839,17 @@ const DEFAULT_BANK = {
   { q:"Idzhar qamariyah terjadi apabila alif lam (<span class='ar'>ال</span>) bertemu dengan huruf...", correct:"Qamariyah", wrong:["Syamsiyah","Halqi","Qalqalah"], exp:"Idzhar Qamariyah terjadi jika alif lam bertemu 14 huruf qamariyah." },
   { q:"Idzhar syafawi terjadi apabila mim sukun (<span class='ar'>مْ</span>) bertemu dengan huruf...", correct:"Selain mim dan ba", wrong:["Mim dan ba","Huruf halqi","Huruf qalqalah"], exp:"Mim sukun bertemu selain mim dan ba dibaca jelas (Idzhar Syafawi)." },
   { q:"Qalqalah sugra terjadi apabila huruf qalqalah bersukun di...", correct:"Tengah atau akhir kata", wrong:["Awal kata","Tengah ayat","Setelah mad"], exp:"Qalqalah sugra terjadi pada huruf qalqalah yang bersukun di tengah kata." },
-  // Isian
-  { q: "Surah Al-‘Alaq adalah surah ke-....", type: "isian", correct: ["96"], exp: "Surah Al-'Alaq adalah surah ke-96." },
-  { q: "Surah Al-‘Alaq terdiri dari ... ayat.", type: "isian", correct: ["19"], exp: "Surah Al-'Alaq terdiri dari 19 ayat." },
-  { q: "Lafal <span class='ar'>اِقْرَأْ</span> artinya ....", type: "isian", correct: ["bacalah"], exp: "Iqra artinya bacalah." },
-  { q: "Lafal <span class='ar'>الْقَلَمِ</span> artinya ....", type: "isian", correct: ["pena"], exp: "Al-qalam artinya pena." },
-  { q: "Lafal <span class='ar'>الْأَكْرَمُ</span> artinya Maha ....", type: "isian", correct: ["mulia"], exp: "Al-Akram artinya Maha Mulia." },
-  { q: "Lafal <span class='ar'>عَلَقٍ</span> artinya segumpal ....", type: "isian", correct: ["darah"], exp: "Alaq artinya segumpal darah." },
-  { q: "Wahyu pertama diterima Nabi di Gua ....", type: "isian", correct: ["Hira"], exp: "Nabi menerima wahyu di Gua Hira." },
-  { q: "Malaikat penyampai wahyu adalah ....", type: "isian", correct: ["Jibril"], exp: "Malaikat penyampai wahyu adalah Jibril." },
-  { q: "Nabi menerima wahyu pertama pada usia ... tahun.", type: "isian", correct: ["40", "40 tahun"], exp: "Nabi menerima wahyu pada usia 40 tahun." },
-  { q: "Mad thabi’i panjangnya ... harakat.", type: "isian", correct: ["2", "dua"], exp: "Mad thabi'i panjangnya 2 harakat." }
+  // Isian Baru
+  { q: "Surah Al-‘Alaq adalah surah ke-....", type: "isian", correct: ["96", "sembilan puluh enam"], exp: "" },
+  { q: "Surah Al-‘Alaq terdiri dari ... ayat.", type: "isian", correct: ["19", "sembilan belas"], exp: "" },
+  { q: "Lafal <span class='ar'>اِقْرَأْ</span> artinya ....", type: "isian", correct: ["bacalah"], exp: "" },
+  { q: "Lafal <span class='ar'>الْقَلَمِ</span> artinya ....", type: "isian", correct: ["pena"], exp: "" },
+  { q: "Lafal <span class='ar'>الْأَكْرَمُ</span> artinya Maha ....", type: "isian", correct: ["mulia"], exp: "" },
+  { q: "Lafal <span class='ar'>عَلَقٍ</span> artinya segumpal ....", type: "isian", correct: ["darah"], exp: "" },
+  { q: "Wahyu pertama diterima Nabi di Gua ....", type: "isian", correct: ["Hira"], exp: "" },
+  { q: "Malaikat penyampai wahyu adalah ....", type: "isian", correct: ["Jibril"], exp: "" },
+  { q: "Nabi menerima wahyu pertama pada usia ... tahun.", type: "isian", correct: ["40", "empat puluh"], exp: "" },
+  { q: "Mad thabi’i panjangnya ... harakat.", type: "isian", correct: ["2", "dua"], exp: "" }
 ],
 "4-akidah1": [
   { q:"Asmaul Husna terdiri dari dua kata, yaitu al-asma' dan al-husna. Kata al-husna memiliki arti...", correct:"yang terbaik", wrong:["yang buruk","yang banyak","yang sedikit"], exp:"Al-Husna artinya yang terbaik atau yang indah." },
@@ -822,17 +872,17 @@ const DEFAULT_BANK = {
   { q:"Berdoa dengan suara pelan pun tetap didengar oleh Allah. Hal ini menunjukkan sifat Allah...", correct:"As-Sami'", wrong:["Al-Bashir","Al-Hafizh","Al-Wali"], exp:"Allah Maha Mendengar bisikan sekecil apa pun." },
   { q:"Sikap tawakal (berserah diri) setelah berusaha merupakan bentuk meneladani sifat...", correct:"Al-Wali", wrong:["As-Sami'","Al-Bashir","Al-Hafizh"], exp:"Setelah berusaha, kita berserah diri memohon perlindungan Allah (Al-Wali)." },
   { q:"Berlaku jujur, menjaga ucapan, dan peduli pada sesama termasuk meneladani sifat Allah...", correct:"As-Sami' dan Al-Bashir", wrong:["Al-Karim","Al-Malik","Al-Quddus"], exp:"Menjaga ucapan (As-Sami') dan berbuat jujur (Al-Bashir)." },
-  // Isian
-  { q: "As-Sami’ artinya Maha ....", type: "isian", correct: ["Mendengar"], exp: "As-Sami' artinya Maha Mendengar." },
-  { q: "Al-Bashir artinya Maha ....", type: "isian", correct: ["Melihat"], exp: "Al-Bashir artinya Maha Melihat." },
-  { q: "Al-Hafizh artinya Maha ....", type: "isian", correct: ["Memelihara"], exp: "Al-Hafizh artinya Maha Memelihara." },
-  { q: "Al-Wali artinya Maha ....", type: "isian", correct: ["Melindungi"], exp: "Al-Wali artinya Maha Melindungi." },
-  { q: "Jumlah Asmaul Husna yang dianjurkan diketahui adalah ....", type: "isian", correct: ["99"], exp: "Asmaul Husna berjumlah 99." },
-  { q: "Dalil Asmaul Husna terdapat dalam surah Al-A’raf ayat ....", type: "isian", correct: ["180"], exp: "Dalilnya ada di QS. Al-A'raf ayat 180." },
-  { q: "Allah Maha Melihat membuat kita harus ....", type: "isian", correct: ["jujur"], exp: "Karena Allah Maha Melihat, kita harus jujur." },
-  { q: "Menjaga kebersihan lingkungan meneladani sifat ....", type: "isian", correct: ["Al-Hafizh", "Al Hafizh"], exp: "Menjaga lingkungan adalah meneladani Al-Hafizh." },
-  { q: "Berdoa dengan suara pelan tetap didengar Allah menunjukkan sifat ....", type: "isian", correct: ["As-Sami'", "As Sami"], exp: "Allah Maha Mendengar (As-Sami')." },
-  { q: "Berserah diri setelah berusaha disebut ....", type: "isian", correct: ["tawakal"], exp: "Berserah diri setelah berusaha disebut tawakal." }
+  // Isian Baru
+  { q: "As-Sami’ artinya Maha ....", type: "isian", correct: ["Mendengar"], exp: "" },
+  { q: "Al-Bashir artinya Maha ....", type: "isian", correct: ["Melihat"], exp: "" },
+  { q: "Al-Hafizh artinya Maha ....", type: "isian", correct: ["Memelihara"], exp: "" },
+  { q: "Al-Wali artinya Maha ....", type: "isian", correct: ["Melindungi"], exp: "" },
+  { q: "Jumlah Asmaul Husna yang dianjurkan diketahui adalah ....", type: "isian", correct: ["99", "sembilan puluh sembilan"], exp: "" },
+  { q: "Dalil Asmaul Husna terdapat dalam surah Al-A’raf ayat ....", type: "isian", correct: ["180", "seratus delapan puluh"], exp: "" },
+  { q: "Allah Maha Melihat membuat kita harus ....", type: "isian", correct: ["jujur"], exp: "" },
+  { q: "Menjaga kebersihan lingkungan meneladani sifat ....", type: "isian", correct: ["Al-Hafizh"], exp: "" },
+  { q: "Berdoa dengan suara pelan tetap didengar Allah menunjukkan sifat ....", type: "isian", correct: ["As-Sami’"], exp: "" },
+  { q: "Berserah diri setelah berusaha disebut ....", type: "isian", correct: ["tawakal"], exp: "" }
 ],
 "4-akhlak1": [
   { q:"Akhlak dalam ajaran Islam memiliki arti...", correct:"perilaku atau budi pekerti", wrong:["kekayaan","kepandaian","kekuasaan"], exp:"Akhlak adalah perilaku, budi pekerti, atau tingkah laku." },
@@ -855,17 +905,17 @@ const DEFAULT_BANK = {
   { q:"Perilaku yang menunjukkan akhlak kepada saudara adalah...", correct:"meminjamkan mainan kepada adik", wrong:["merebut makanan adik","mengadu pada orang tua","memukul kakak"], exp:"Berbagi dengan saudara mencerminkan akhlak baik." },
   { q:"Sikap kita kepada orang tua yang sudah lanjut usia sebaiknya...", correct:"lebih menyayangi dan merawat", wrong:["menjauhkan diri","menitipkan ke panti","membiarkan sendiri"], exp:"Orang tua yang lanjut usia butuh perhatian dan kasih sayang." },
   { q:"Keluarga yang harmonis dapat terwujud jika setiap anggota keluarga...", correct:"saling menyayangi dan menghormati", wrong:["sering bertengkar","saling mengadu","saling menjauhi"], exp:"Harmoni keluarga dibangun dengan kasih sayang dan hormat." },
-  // Isian
-  { q: "Berbakti kepada orang tua disebut birrul ....", type: "isian", correct: ["walidain"], exp: "Berbakti kepada orang tua disebut birrul walidain." },
-  { q: "Perintah berbakti kepada orang tua terdapat dalam surah Al-Isra’ ayat ....", type: "isian", correct: ["23"], exp: "Perintah berbakti ada di QS. Al-Isra' ayat 23." },
-  { q: "Kata “ah” kepada orang tua dilarang dalam QS. Al-Isra’ ayat ....", type: "isian", correct: ["23"], exp: "Larangan berkata 'ah' ada di QS. Al-Isra' ayat 23." },
-  { q: "Jasa ibu mengandung dan menyusui dijelaskan dalam QS. Luqman ayat ....", type: "isian", correct: ["14"], exp: "Jasa ibu dijelaskan di QS. Luqman ayat 14." },
-  { q: "Ridho Allah ada pada ridho ....", type: "isian", correct: ["orangtua", "orang tua"], exp: "Ridho Allah ada pada ridho orang tua." },
-  { q: "Akhlak baik kepada saudara dilakukan dengan saling ....", type: "isian", correct: ["menyayangi", "menghormati"], exp: "Saling menyayangi sesama saudara." },
-  { q: "Orang yang paling berjasa setelah Allah adalah ....", type: "isian", correct: ["orangtua", "orang tua"], exp: "Orang tua adalah yang paling berjasa." },
-  { q: "Berbicara kepada orang tua harus dengan bahasa ....", type: "isian", correct: ["sopan", "lembut"], exp: "Berbicara harus dengan bahasa sopan." },
-  { q: "Membantu pekerjaan rumah termasuk berbakti kepada ....", type: "isian", correct: ["orangtua", "orang tua"], exp: "Membantu pekerjaan rumah adalah bakti kepada orang tua." },
-  { q: "Mendoakan orang tua yang telah meninggal termasuk ....", type: "isian", correct: ["berbakti", "bakti"], exp: "Mendoakan adalah bentuk bakti." }
+  // Isian Baru
+  { q: "Berbakti kepada orang tua disebut birrul ....", type: "isian", correct: ["walidain"], exp: "" },
+  { q: "Perintah berbakti kepada orang tua terdapat dalam surah Al-Isra’ ayat ....", type: "isian", correct: ["23", "dua puluh tiga"], exp: "" },
+  { q: "Kata “ah” kepada orang tua dilarang dalam QS. Al-Isra’ ayat ....", type: "isian", correct: ["23", "dua puluh tiga"], exp: "" },
+  { q: "Jasa ibu mengandung dan menyusui dijelaskan dalam QS. Luqman ayat ....", type: "isian", correct: ["14", "empat belas"], exp: "" },
+  { q: "Ridho Allah ada pada ridho ....", type: "isian", correct: ["orangtua"], exp: "" },
+  { q: "Akhlak baik kepada saudara dilakukan dengan saling ....", type: "isian", correct: ["menyayangi"], exp: "" },
+  { q: "Orang yang paling berjasa setelah Allah adalah ....", type: "isian", correct: ["orangtua"], exp: "" },
+  { q: "Berbicara kepada orang tua harus dengan bahasa ....", type: "isian", correct: ["sopan"], exp: "" },
+  { q: "Membantu pekerjaan rumah termasuk berbakti kepada ....", type: "isian", correct: ["orangtua"], exp: "" },
+  { q: "Mendoakan orang tua yang telah meninggal termasuk ....", type: "isian", correct: ["berbakti"], exp: "" }
 ],
 "4-fikih1": [
   { q:"Pertumbuhan dan perkembangan pada manusia menunjukkan bahwa manusia...", correct:"selalu berubah", wrong:["tidak berubah","tetap sama","tidak berkembang"], exp:"Manusia mengalami pertumbuhan dan perubahan seiring waktu." },
@@ -888,17 +938,17 @@ const DEFAULT_BANK = {
   { q:"Menjaga kesucian dan kebersihan diri setelah baligh khususnya melalui...", correct:"mandi wajib", wrong:["mandi biasa","berenang","mencuci tangan"], exp:"Setelah baligh, hadats besar disucikan dengan mandi wajib." },
   { q:"Perilaku yang harus dihindari setelah baligh adalah...", correct:"berbohong dan mengejek teman", wrong:["berkata jujur","membantu teman","rajin belajar"], exp:"Setelah baligh, dosa dan pahala dicatat, hindari perilaku buruk." },
   { q:"Sikap yang menunjukkan tanggung jawab setelah baligh adalah...", correct:"mengerjakan tugas dengan sungguh-sungguh", wrong:["menunda pekerjaan","melalaikan tugas","mengabaikan tanggung jawab"], exp:"Tanggung jawab adalah ciri kedewasaan setelah baligh." },
-  // Isian
-  { q: "Masa kedewasaan dalam Islam disebut ....", type: "isian", correct: ["baligh", "balig"], exp: "Masa kedewasaan dalam Islam disebut baligh." },
-  { q: "Orang yang telah baligh dan berakal disebut ....", type: "isian", correct: ["mukalaf", "mukallaf"], exp: "Orang yang telah baligh dan berakal disebut mukalaf." },
-  { q: "Tanda baligh pada perempuan adalah ....", type: "isian", correct: ["haid", "menstruasi"], exp: "Tanda baligh perempuan adalah haid." },
-  { q: "Tanda baligh pada laki-laki adalah mimpi ....", type: "isian", correct: ["basah"], exp: "Tanda baligh laki-laki adalah mimpi basah." },
-  { q: "Usia baligh menurut fikih jika tanda belum muncul adalah ... tahun Hijriah.", type: "isian", correct: ["15", "lima belas"], exp: "Usia baligh menurut fikih adalah 15 tahun Hijriah." },
-  { q: "Beban tanggung jawab keagamaan disebut ....", type: "isian", correct: ["taklif", "taklif."], exp: "Beban tanggung jawab disebut taklif." },
-  { q: "Salat lima waktu wajib setelah ....", type: "isian", correct: ["baligh", "balig"], exp: "Salat wajib setelah baligh." },
-  { q: "Puasa Ramadan wajib bagi muslim yang telah ....", type: "isian", correct: ["baligh", "balig"], exp: "Puasa wajib bagi yang telah baligh." },
-  { q: "Mandi setelah haid disebut mandi ....", type: "isian", correct: ["wajib"], exp: "Mandi setelah haid disebut mandi wajib." },
-  { q: "Menjaga kebersihan diri setelah baligh adalah tanggung jawab terhadap ....", type: "isian", correct: ["diri", "diri sendiri"], exp: "Kebersihan diri adalah tanggung jawab terhadap diri sendiri." }
+  // Isian Baru
+  { q: "Masa kedewasaan dalam Islam disebut ....", type: "isian", correct: ["baligh"], exp: "" },
+  { q: "Orang yang telah baligh dan berakal disebut ....", type: "isian", correct: ["mukalaf"], exp: "" },
+  { q: "Tanda baligh pada perempuan adalah ....", type: "isian", correct: ["haid"], exp: "" },
+  { q: "Tanda baligh pada laki-laki adalah mimpi ....", type: "isian", correct: ["basah"], exp: "" },
+  { q: "Usia baligh menurut fikih jika tanda belum muncul adalah ... tahun Hijriah.", type: "isian", correct: ["15", "lima belas"], exp: "" },
+  { q: "Beban tanggung jawab keagamaan disebut ....", type: "isian", correct: ["taklif"], exp: "" },
+  { q: "Salat lima waktu wajib setelah ....", type: "isian", correct: ["baligh"], exp: "" },
+  { q: "Puasa Ramadan wajib bagi muslim yang telah ....", type: "isian", correct: ["baligh"], exp: "" },
+  { q: "Mandi setelah haid disebut mandi ....", type: "isian", correct: ["wajib"], exp: "" },
+  { q: "Menjaga kebersihan diri setelah baligh adalah tanggung jawab terhadap ....", type: "isian", correct: ["diri"], exp: "" }
 ],
 "4-spi1": [
   { q:"Nabi Muhammad saw. dilahirkan di kota...", correct:"Makkah", wrong:["Madinah","Thaif","Yaman"], exp:"Nabi Muhammad dilahirkan di kota Makkah." },
@@ -921,21 +971,22 @@ const DEFAULT_BANK = {
   { q:"Zaid bin Haritsah adalah... Nabi Muhammad saw.", correct:"orang yang dekat dengan Nabi", wrong:["paman Nabi","musuh Nabi","tetangga Nabi"], exp:"Zaid adalah anak angkat Nabi yang sangat setia." },
   { q:"Kaum yang paling banyak menolak dakwah Nabi Muhammad saw. di Makkah adalah...", correct:"kaum Quraisy", wrong:["kaum Anshar","kaum Muhajirin","kaum Yahudi"], exp:"Kaum Quraisy adalah penentang utama dakwah Nabi di Makkah." },
   { q:"Sikap Nabi Muhammad saw. ketika dakwahnya ditolak adalah...", correct:"sabar dan tetap teguh", wrong:["marah dan membalas","berhenti berdakwah","pindah ke negeri lain"], exp:"Nabi tetap sabar dan teguh dalam berdakwah." },
-  // Isian
-  { q: "Nabi Muhammad lahir di kota ....", type: "isian", correct: ["Makkah", "Mekah"], exp: "Nabi lahir di kota Makkah." },
-  { q: "Nabi lahir pada tahun ....", type: "isian", correct: ["Gajah"], exp: "Nabi lahir pada Tahun Gajah." },
-  { q: "Gelar kejujuran Nabi adalah ....", type: "isian", correct: ["Al-Amin", "Al Amin"], exp: "Gelar Nabi karena kejujurannya adalah Al-Amin." },
-  { q: "Nabi berkhalwat di Gua ....", type: "isian", correct: ["Hira"], exp: "Nabi berkhalwat di Gua Hira." },
-  { q: "Wahyu pertama adalah surah ....", type: "isian", correct: ["Al-'Alaq", "Al Alaq", "Alaq"], exp: "Wahyu pertama adalah surah Al-'Alaq." },
-  { q: "Malaikat penyampai wahyu adalah ....", type: "isian", correct: ["Jibril"], exp: "Malaikat penyampai wahyu adalah Jibril." },
-  { q: "Nabi diangkat menjadi rasul pada usia ... tahun.", type: "isian", correct: ["40", "40 tahun"], exp: "Nabi diangkat menjadi rasul pada usia 40 tahun." },
-  { q: "Dakwah sembunyi-sembunyi disebut ....", type: "isian", correct: ["sirriyyah", "sirriyah"], exp: "Dakwah sembunyi-sembunyi disebut sirriyyah." },
-  { q: "Dakwah terang-terangan disebut ....", type: "isian", correct: ["jahriyyah", "jahriyah"], exp: "Dakwah terang-terangan disebut jahriyyah." },
-  { q: "Orang pertama yang menerima dakwah Nabi dari kalangan perempuan adalah ....", type: "isian", correct: ["Khadijah", "Siti Khadijah"], exp: "Perempuan pertama yang beriman adalah Khadijah." }
+  // Isian Baru
+  { q: "Nabi Muhammad lahir di kota ....", type: "isian", correct: ["Makkah"], exp: "" },
+  { q: "Nabi lahir pada tahun ....", type: "isian", correct: ["Gajah"], exp: "" },
+  { q: "Gelar kejujuran Nabi adalah ....", type: "isian", correct: ["Al-Amin"], exp: "" },
+  { q: "Nabi berkhalwat di Gua ....", type: "isian", correct: ["Hira"], exp: "" },
+  { q: "Wahyu pertama adalah surah ....", type: "isian", correct: ["Al-‘Alaq"], exp: "" },
+  { q: "Malaikat penyampai wahyu adalah ....", type: "isian", correct: ["Jibril"], exp: "" },
+  { q: "Nabi diangkat menjadi rasul pada usia ... tahun.", type: "isian", correct: ["40", "empat puluh"], exp: "" },
+  { q: "Dakwah sembunyi-sembunyi disebut ....", type: "isian", correct: ["sirriyyah"], exp: "" },
+  { q: "Dakwah terang-terangan disebut ....", type: "isian", correct: ["jahriyyah"], exp: "" },
+  { q: "Orang pertama yang menerima dakwah Nabi dari kalangan perempuan adalah ....", type: "isian", correct: ["Khadijah"], exp: "" }
 ],
 
 /* ================= KELAS 5 ================= */
 "5-quran1": [
+  // PG
   { q:"Surat Al-Qadr adalah surat ke-... dalam Al-Qur'an.", correct:"97", wrong:["95","96","98"], exp:"Surat Al-Qadr adalah surat ke-97." },
   { q:"Surat Al-Qadr terdiri dari ... ayat.", correct:"5", wrong:["3","4","6"], exp:"Surat Al-Qadr terdiri dari 5 ayat." },
   { q:"Kata 'Al-Qadr' secara bahasa memiliki arti...", correct:"Kemuliaan", wrong:["Kekayaan","Kekuasaan","Kemenangan"], exp:"Al-Qadr berarti kemuliaan." },
@@ -955,9 +1006,21 @@ const DEFAULT_BANK = {
   { q:"Malam Lailatul Qadr berlangsung hingga...", correct:"Terbit fajar", wrong:["Tengah malam","Terbit matahari","Waktu ashar"], exp:"Malam Lailatul Qadr berlangsung hingga terbit fajar." },
   { q:"Doa yang dianjurkan pada malam Lailatul Qadr adalah...", correct:"Allahumma innaka 'afuwwun...", wrong:["Doa qunut","Doa iftitah","Doa kunut"], exp:"Doa yang dianjurkan adalah Allahumma innaka 'afuwwun..." },
   { q:"Kata 'الرُّوْحُ' dalam Surat Al-Qadr merujuk pada...", correct:"Malaikat Jibril", wrong:["Malaikat Mikail","Ruh manusia","Angin surga"], exp:"Ar-Ruh dalam surat ini merujuk pada Malaikat Jibril." },
-  { q:"Amalan utama di malam Lailatul Qadr adalah...", correct:"Shalat malam dan tadarus", wrong:["Tidur lebih awal","Berbelanja","Menonton TV"], exp:"Amalan utamanya adalah shalat malam dan tadarus Al-Qur'an." }
+  { q:"Amalan utama di malam Lailatul Qadr adalah...", correct:"Shalat malam dan tadarus", wrong:["Tidur lebih awal","Berbelanja","Menonton TV"], exp:"Amalan utamanya adalah shalat malam dan tadarus Al-Qur'an." },
+  // Isian Baru Kelas 5
+  { q: "Surat Al-Qadr adalah surat ke-....", type: "isian", correct: ["97", "sembilan puluh tujuh"], exp: "" },
+  { q: "Surat Al-Qadr terdiri dari ... ayat.", type: "isian", correct: ["5", "lima"], exp: "" },
+  { q: "Kata “Al-Qadr” secara bahasa memiliki arti ....", type: "isian", correct: ["Kemuliaan"], exp: "" },
+  { q: "Malam Lailatul Qadr lebih baik daripada ... bulan.", type: "isian", correct: ["1000", "seribu"], exp: "" },
+  { q: "Pada malam Lailatul Qadr, Allah menurunkan ....", type: "isian", correct: ["Al-Qur'an"], exp: "" },
+  { q: "Malaikat yang turun pada malam Lailatul Qadr adalah ....", type: "isian", correct: ["Jibril"], exp: "" },
+  { q: "Lafal “تَنَزَّلُ” memiliki arti ....", type: "isian", correct: ["Turun"], exp: "" },
+  { q: "Malam Lailatul Qadr terjadi pada bulan ....", type: "isian", correct: ["Ramadhan"], exp: "" },
+  { q: "1000 bulan jika dihitung dalam tahun sama dengan ... tahun ... bulan.", type: "isian", correct: ["83, 4", "83 4", "83,4", "83 tahun 4 bulan"], exp: "" },
+  { q: "Doa yang dianjurkan pada malam Lailatul Qadr adalah Allahumma innaka 'afuwwun ....", type: "isian", correct: ["Karim"], exp: "" }
 ],
 "5-akidah1": [
+  // PG
   { q:"Asmaulhusna secara bahasa berarti...", correct:"Nama-nama yang indah", wrong:["Nama-nama yang buruk","Sifat wajib","Sifat mustahil"], exp:"Asmaulhusna berarti nama-nama yang indah." },
   { q:"Jumlah Asmaulhusna ada...", correct:"99", wrong:["79","89","100"], exp:"Asmaulhusna berjumlah 99." },
   { q:"Al-Qayyum artinya...", correct:"Maha Berdiri Sendiri", wrong:["Maha Menghidupkan","Maha Mematikan","Maha Membangkitkan"], exp:"Al-Qayyum berarti Maha Berdiri Sendiri." },
@@ -977,9 +1040,21 @@ const DEFAULT_BANK = {
   { q:"Allah yang mengurus makhluk-Nya tanpa bantuan siapa pun adalah...", correct:"Al-Qayyum", wrong:["Al-Muhyi","Al-Mumit","Al-Ba'its"], exp:"Al-Qayyum mengurus makhluk tanpa bantuan siapa pun." },
   { q:"Allah yang menghidupkan bumi yang mati dengan hujan adalah...", correct:"Al-Muhyi", wrong:["Al-Qayyum","Al-Mumit","Al-Ba'its"], exp:"Al-Muhyi menghidupkan bumi yang mati dengan hujan." },
   { q:"Kematian bagi setiap makhluk adalah ketetapan...", correct:"Al-Mumit", wrong:["Al-Qayyum","Al-Muhyi","Al-Ba'its"], exp:"Kematian adalah ketetapan Allah (Al-Mumit)." },
-  { q:"Manusia dibangkitkan dari kubur pada hari kiamat adalah bukti...", correct:"Al-Ba'its", wrong:["Al-Qayyum","Al-Muhyi","Al-Mumit"], exp:"Dibangkitkannya manusia membuktikan sifat Al-Ba'its." }
+  { q:"Manusia dibangkitkan dari kubur pada hari kiamat adalah bukti...", correct:"Al-Ba'its", wrong:["Al-Qayyum","Al-Muhyi","Al-Mumit"], exp:"Dibangkitkannya manusia membuktikan sifat Al-Ba'its." },
+  // Isian Baru Kelas 5
+  { q: "Al-Qayyum artinya Maha ....", type: "isian", correct: ["Berdiri Sendiri", "Berdiri sendiri"], exp: "" },
+  { q: "Al-Muhyi artinya Maha ....", type: "isian", correct: ["Menghidupkan"], exp: "" },
+  { q: "Al-Mumit artinya Maha ....", type: "isian", correct: ["Mematikan"], exp: "" },
+  { q: "Al-Ba'its artinya Maha ....", type: "isian", correct: ["Membangkitkan"], exp: "" },
+  { q: "Dalil tentang Al-Qayyum terdapat dalam QS. Ali 'Imran ayat ....", type: "isian", correct: ["2", "dua"], exp: "" },
+  { q: "Allah menghidupkan bumi yang mati dengan hujan adalah bukti sifat ....", type: "isian", correct: ["Al-Muhyi"], exp: "" },
+  { q: "Kematian bagi setiap makhluk adalah ketetapan ....", type: "isian", correct: ["Al-Mumit"], exp: "" },
+  { q: "Bangun tidur adalah bukti kecil dari sifat ....", type: "isian", correct: ["Al-Ba'its"], exp: "" },
+  { q: "Meneladani Al-Qayyum dilakukan dengan sikap ....", type: "isian", correct: ["Mandiri"], exp: "" },
+  { q: "Meneladani Al-Muhyi dilakukan dengan cara ....", type: "isian", correct: ["Bersyukur"], exp: "" }
 ],
 "5-akhlak1": [
+  // PG
   { q:"Doa secara bahasa berarti...", correct:"Memohon", wrong:["Berserah diri","Berusaha","Bersyukur"], exp:"Doa secara bahasa berarti memohon." },
   { q:"Tawakal secara bahasa berarti...", correct:"Berserah diri", wrong:["Memohon","Berusaha","Bersyukur"], exp:"Tawakal secara bahasa berarti berserah diri." },
   { q:"Doa secara istilah adalah...", correct:"Permohonan hamba kepada Allah", wrong:["Pasrah tanpa usaha","Berusaha keras","Menyerah"], exp:"Doa secara istilah adalah permohonan hamba kepada Allah." },
@@ -999,9 +1074,21 @@ const DEFAULT_BANK = {
   { q:"Berdoa dengan berteriak-teriak termasuk...", correct:"Tidak sesuai adab", wrong:["Dianjurkan","Sunah","Wajib"], exp:"Berdoa dengan berteriak tidak sesuai adab." },
   { q:"Tawakal harus didahului dengan...", correct:"Ikhtiar", wrong:["Tidur","Bermain","Menyerah"], exp:"Tawakal harus didahului dengan ikhtiar." },
   { q:"Sikap orang beriman saat doa belum terkabul adalah...", correct:"Sabar", wrong:["Putus asa","Marah","Kufur"], exp:"Orang beriman harus sabar menunggu doa terkabul." },
-  { q:"QS. Al-A'raf: 55 memerintahkan berdoa dengan...", correct:"Rendah hati", wrong:["Sombong","Keras","Berteriak"], exp:"QS. Al-A'raf: 55 memerintahkan berdoa dengan rendah hati." }
+  { q:"QS. Al-A'raf: 55 memerintahkan berdoa dengan...", correct:"Rendah hati", wrong:["Sombong","Keras","Berteriak"], exp:"QS. Al-A'raf: 55 memerintahkan berdoa dengan rendah hati." },
+  // Isian Baru Kelas 5
+  { q: "Doa secara bahasa berarti ....", type: "isian", correct: ["Memohon"], exp: "" },
+  { q: "Tawakal secara bahasa berarti ....", type: "isian", correct: ["Berserah diri", "Berserah"], exp: "" },
+  { q: "Dalil doa terdapat dalam QS. Al-Baqarah ayat ....", type: "isian", correct: ["186", "seratus delapan puluh enam"], exp: "" },
+  { q: "Etika berdoa menghadap ke ....", type: "isian", correct: ["Kiblat"], exp: "" },
+  { q: "Suara saat berdoa dianjurkan ....", type: "isian", correct: ["Lembut"], exp: "" },
+  { q: "Doa tanpa usaha disebut ....", type: "isian", correct: ["Kesia-siaan", "Sia-sia"], exp: "" },
+  { q: "Usaha tanpa doa disebut ....", type: "isian", correct: ["Kesombongan", "Sombong"], exp: "" },
+  { q: "Rumus hidup sukses adalah Ikhtiar + Doa + ....", type: "isian", correct: ["Tawakal"], exp: "" },
+  { q: "Hikmah tawakal adalah ....", type: "isian", correct: ["Ketenangan hati", "Tenang"], exp: "" },
+  { q: "QS. Al-A'raf: 55 memerintahkan berdoa dengan ....", type: "isian", correct: ["Rendah hati"], exp: "" }
 ],
 "5-fikih1": [
+  // PG
   { q:"Puasa secara bahasa berarti...", correct:"Menahan diri", wrong:["Makan","Minum","Tidur"], exp:"Puasa secara bahasa berarti menahan diri." },
   { q:"Puasa secara istilah adalah...", correct:"Menahan dari fajar hingga maghrib", wrong:["Menahan dari pagi hingga siang","Menahan dari malam hingga pagi","Menahan dari subuh hingga ashar"], exp:"Puasa secara istilah menahan diri dari fajar hingga maghrib." },
   { q:"Dalil puasa wajib terdapat dalam...", correct:"QS. Al-Baqarah: 183", wrong:["QS. Al-Baqarah: 184","QS. Al-Baqarah: 185","QS. Al-Baqarah: 187"], exp:"Dalil puasa wajib ada di QS. Al-Baqarah ayat 183." },
@@ -1021,9 +1108,21 @@ const DEFAULT_BANK = {
   { q:"Puasa Arafah dilakukan pada tanggal...", correct:"9 Zulhijah", wrong:["8 Zulhijah","10 Zulhijah","11 Zulhijah"], exp:"Puasa Arafah dilakukan pada tanggal 9 Zulhijah." },
   { q:"Puasa Tarwiyah dilakukan pada tanggal...", correct:"8 Zulhijah", wrong:["9 Zulhijah","10 Zulhijah","11 Zulhijah"], exp:"Puasa Tarwiyah dilakukan pada tanggal 8 Zulhijah." },
   { q:"Puasa Daud dilakukan dengan cara...", correct:"Selang-seling", wrong:["Setiap hari","Seminggu sekali","Sebulan sekali"], exp:"Puasa Daud dilakukan secara selang-seling (sehari puasa, sehari tidak)." },
-  { q:"Hukum puasa sunah adalah...", correct:"Berpahala jika dikerjakan", wrong:["Berdosa jika ditinggalkan","Wajib","Makruh"], exp:"Puasa sunah berpahala jika dikerjakan, tidak berdosa jika ditinggalkan." }
+  { q:"Hukum puasa sunah adalah...", correct:"Berpahala jika dikerjakan", wrong:["Berdosa jika ditinggalkan","Wajib","Makruh"], exp:"Puasa sunah berpahala jika dikerjakan, tidak berdosa jika ditinggalkan." },
+  // Isian Baru Kelas 5
+  { q: "Puasa secara bahasa berarti ....", type: "isian", correct: ["Menahan diri", "Menahan"], exp: "" },
+  { q: "Dalil puasa wajib terdapat dalam QS. Al-Baqarah ayat ....", type: "isian", correct: ["183", "seratus delapan puluh tiga"], exp: "" },
+  { q: "Puasa wajib utama bagi umat Islam adalah bulan ....", type: "isian", correct: ["Ramadhan", "Ramadan"], exp: "" },
+  { q: "Rukun puasa yang pertama adalah ....", type: "isian", correct: ["Niat"], exp: "" },
+  { q: "Jika lupa makan saat puasa, maka puasanya ....", type: "isian", correct: ["Tetap sah", "Sah"], exp: "" },
+  { q: "Ganti puasa bagi yang sakit permanen adalah ....", type: "isian", correct: ["Fidyah"], exp: "" },
+  { q: "Puasa Senin-Kamis dilakukan pada hari ....", type: "isian", correct: ["Senin dan Kamis", "Senin, Kamis"], exp: "" },
+  { q: "Puasa Ayyamul Bidh dilakukan pada tanggal ....", type: "isian", correct: ["13, 14, 15 Hijriah", "13 14 15"], exp: "" },
+  { q: "Puasa Syawal dilakukan selama ... hari.", type: "isian", correct: ["6", "enam"], exp: "" },
+  { q: "Berbuka puasa dianjurkan dengan ....", type: "isian", correct: ["Kurma/Air", "Kurma", "Air"], exp: "" }
 ],
 "5-spi1": [
+  // PG
   { q:"Hijrah artinya...", correct:"Berpindah", wrong:["Berdagang","Berperang","Berdiam"], exp:"Hijrah artinya berpindah." },
   { q:"Nabi Muhammad SAW hijrah dari...", correct:"Makkah ke Madinah", wrong:["Madinah ke Makkah","Makkah ke Thaif","Madinah ke Syam"], exp:"Nabi hijrah dari Makkah ke Madinah." },
   { q:"Teman Nabi saat hijrah adalah...", correct:"Abu Bakar", wrong:["Umar","Utsman","Ali"], exp:"Teman Nabi saat hijrah adalah Abu Bakar." },
@@ -1043,7 +1142,18 @@ const DEFAULT_BANK = {
   { q:"Dalil tentang keberagaman adalah...", correct:"QS. Al-Hujurat: 13", wrong:["QS. Al-Hujurat: 10","QS. Al-Kafirun: 6","QS. Ali Imran: 103"], exp:"Dalil keberagaman ada di QS. Al-Hujurat ayat 13." },
   { q:"Nilai keteladanan Nabi periode Madinah adalah...", correct:"Gotong royong", wrong:["Sombong","Malas","Egois"], exp:"Nilai keteladanannya adalah gotong royong." },
   { q:"Hikmah hijrah bagi umat Islam adalah...", correct:"Persatuan", wrong:["Perpecahan","Kemunduran","Kemiskinan"], exp:"Hikmah hijrah adalah terwujudnya persatuan." },
-  { q:"Masjid Nabawi dibangun dengan cara...", correct:"Gotong royong", wrong:["Sendiri","Upah","Paksa"], exp:"Masjid Nabawi dibangun secara gotong royong." }
+  { q:"Masjid Nabawi dibangun dengan cara...", correct:"Gotong royong", wrong:["Sendiri","Upah","Paksa"], exp:"Masjid Nabawi dibangun secara gotong royong." },
+  // Isian Baru Kelas 5
+  { q: "Hijrah artinya ....", type: "isian", correct: ["Berpindah", "Pindah"], exp: "" },
+  { q: "Nabi Muhammad SAW hijrah dari Makkah ke ....", type: "isian", correct: ["Madinah"], exp: "" },
+  { q: "Teman Nabi saat hijrah adalah ....", type: "isian", correct: ["Abu Bakar"], exp: "" },
+  { q: "Tempat persembunyian Nabi saat hijrah adalah Gua ....", type: "isian", correct: ["Tsur"], exp: "" },
+  { q: "Hal pertama yang dibangun Nabi di Madinah adalah ....", type: "isian", correct: ["Masjid"], exp: "" },
+  { q: "Nama masjid yang dibangun Nabi di Madinah adalah ....", type: "isian", correct: ["Nabawi"], exp: "" },
+  { q: "Kaum Muhajirin adalah kaum dari ....", type: "isian", correct: ["Makkah"], exp: "" },
+  { q: "Kaum Anshar adalah penduduk ....", type: "isian", correct: ["Madinah"], exp: "" },
+  { q: "Ukhuwah artinya ....", type: "isian", correct: ["Persaudaraan"], exp: "" },
+  { q: "Piagam Madinah adalah ... tertulis.", type: "isian", correct: ["Perjanjian"], exp: "" }
 ],
 
 /* ================= KELAS 6 ================= */
@@ -1068,17 +1178,17 @@ const DEFAULT_BANK = {
   { q:"Surah Al-Kafirun diturunkan ... Nabi hijrah", correct:"Sebelum", wrong:["Setelah","Bersamaan","Saat"], exp:"Surah Al-Kafirun diturunkan sebelum Nabi hijrah." },
   { q:"Kandungan utama ayat 1-3 Surah Al-Kafirun adalah ...", correct:"Penegasan tidak menyembah yang mereka sembah", wrong:["Penegasan toleransi","Hak kebebasan beragama","Ancaman bagi orang kafir"], exp:"Ayat 1-3 menegaskan tidak menyembah apa yang mereka sembah." },
   { q:"Kandungan utama ayat 4-5 adalah ...", correct:"Larangan mencampuradukkan ibadah", wrong:["Perintah berbuat baik","Larangan berbuat jahat","Perintah shalat"], exp:"Ayat 4-5 melarang mencampuradukkan ibadah." },
-  // Isian
-  { q: "Surah Al-Kafirun menempati urutan ke-... dalam Al-Qur’an.", type: "isian", correct: ["109"], exp: "Surah Al-Kafirun urutan ke-109." },
-  { q: "Surah Al-Kafirun terdiri dari ... ayat.", type: "isian", correct: ["6", "enam"], exp: "Surah Al-Kafirun terdiri dari 6 ayat." },
-  { q: "Surah Al-Kafirun tergolong surah ....", type: "isian", correct: ["Makkiyah"], exp: "Surah Al-Kafirun tergolong surah Makkiyah." },
-  { q: "Lafal <span class='ar'>الْكَافِرُونَ</span> artinya orang ....", type: "isian", correct: ["kafir"], exp: "Al-Kafirun artinya orang kafir." },
-  { q: "Ayat terakhir Al-Kafirun berbunyi <span class='ar'>لَكُمْ دِينُكُمْ وَلِيَ دِينِ</span> yang artinya “untukmu agamamu dan untukku ....”", type: "isian", correct: ["agamaku"], exp: "Artinya untukmu agamamu dan untukku agamaku." },
-  { q: "Membaca Al-Qur’an sesuai kaidah tajwid disebut ....", type: "isian", correct: ["tartil"], exp: "Membaca sesuai kaidah tajwid disebut tartil." },
-  { q: "Tidak mencampur ibadah agama lain termasuk menjaga ....", type: "isian", correct: ["akidah", "aqidah"], exp: "Tidak mencampur ibadah menjaga akidah." },
-  { q: "Ayat ke-6 Al-Kafirun menjadi dasar prinsip ....", type: "isian", correct: ["toleransi"], exp: "Ayat ke-6 dasar prinsip toleransi." },
-  { q: "Lafal <span class='ar'>قُلْ</span> artinya ....", type: "isian", correct: ["katakanlah"], exp: "Qul artinya katakanlah." },
-  { q: "Surah Al-Kafirun diturunkan sebelum Nabi ....", type: "isian", correct: ["hijrah"], exp: "Surah ini diturunkan sebelum Nabi hijrah." }
+  // Isian Baru
+  { q: "Surah Al-Kafirun menempati urutan ke-... dalam Al-Qur’an.", type: "isian", correct: ["109", "seratus sembilan"], exp: "" },
+  { q: "Surah Al-Kafirun terdiri dari ... ayat.", type: "isian", correct: ["6", "enam"], exp: "" },
+  { q: "Surah Al-Kafirun tergolong surah ....", type: "isian", correct: ["Makkiyah"], exp: "" },
+  { q: "Lafal <span class='ar'>الْكَافِرُونَ</span> artinya orang ....", type: "isian", correct: ["kafir"], exp: "" },
+  { q: "Ayat terakhir Al-Kafirun berbunyi <span class='ar'>لَكُمْ دِينُكُمْ وَلِيَ دِينِ</span> yang artinya “untukmu agamamu dan untukku ....”", type: "isian", correct: ["agamaku"], exp: "" },
+  { q: "Membaca Al-Qur’an sesuai kaidah tajwid disebut ....", type: "isian", correct: ["tartil"], exp: "" },
+  { q: "Tidak mencampur ibadah agama lain termasuk menjaga ....", type: "isian", correct: ["akidah"], exp: "" },
+  { q: "Ayat ke-6 Al-Kafirun menjadi dasar prinsip ....", type: "isian", correct: ["toleransi"], exp: "" },
+  { q: "Lafal <span class='ar'>قُلْ</span> artinya ....", type: "isian", correct: ["katakanlah"], exp: "" },
+  { q: "Surah Al-Kafirun diturunkan sebelum Nabi ....", type: "isian", correct: ["hijrah"], exp: "" }
 ],
 "6-akidah1": [
   { q:"Al-Ghaffar artinya ...", correct:"Maha Pengampun", wrong:["Maha Esa","Maha Pemaaf","Maha Dibutuhkan"], exp:"Al-Ghaffar berarti Maha Pengampun." },
@@ -1101,17 +1211,17 @@ const DEFAULT_BANK = {
   { q:"Tidak menyekutukan Allah dalam ibadah adalah wujud meneladani ...", correct:"Al-Ahad", wrong:["Al-Ghaffar","Al-'Aufw","Al-Malik"], exp:"Tidak menyekutukan Allah wujud meneladani Al-Ahad." },
   { q:"Berdoa dan meminta hanya kepada Allah adalah wujud meneladani ...", correct:"As-Samad", wrong:["Al-Ahad","Al-Ghaffar","Al-'Aufw"], exp:"Berdoa hanya kepada Allah wujud meneladani As-Samad." },
   { q:"Al-Ghaffar mengandung makna Allah menutupi dosa hamba-Nya. Analogi yang tepat ...", correct:"Kaca ditutup kain", wrong:["Kaca dibersihkan","Kaca dipecah","Kaca dibuang"], exp:"Al-Ghaffar seperti kaca yang ditutup kain (dosa ditutupi)." },
-  // Isian
-  { q: "Al-Ghaffar artinya Maha ....", type: "isian", correct: ["Pengampun"], exp: "Al-Ghaffar artinya Maha Pengampun." },
-  { q: "Al-‘Aufw artinya Maha ....", type: "isian", correct: ["Pemaaf"], exp: "Al-'Aufw artinya Maha Pemaaf." },
-  { q: "Al-Ahad artinya Maha ....", type: "isian", correct: ["Esa"], exp: "Al-Ahad artinya Maha Esa." },
-  { q: "As-Samad artinya Maha ....", type: "isian", correct: ["Dibutuhkan"], exp: "As-Samad artinya Maha Dibutuhkan." },
-  { q: "Surah yang menjelaskan Al-Ahad dan As-Samad adalah ....", type: "isian", correct: ["Al-Ikhlas", "Al Ikhlas"], exp: "Surah Al-Ikhlas menjelaskan Al-Ahad dan As-Samad." },
-  { q: "Al-Ghaffar menutupi dosa, Al-‘Aufw ... dosa.", type: "isian", correct: ["menghapus"], exp: "Al-'Aufw menghapus dosa." },
-  { q: "Orang yang berbuat dosa sebaiknya ....", type: "isian", correct: ["bertaubat", "taubat"], exp: "Orang berbuat dosa sebaiknya bertaubat." },
-  { q: "Tidak menyekutukan Allah meneladani ....", type: "isian", correct: ["Al-Ahad", "Al Ahad"], exp: "Tidak menyekutukan Allah meneladani Al-Ahad." },
-  { q: "Berdoa hanya kepada Allah meneladani ....", type: "isian", correct: ["As-Samad", "As Samad"], exp: "Berdoa hanya kepada Allah meneladani As-Samad." },
-  { q: "Menutupi ... teman termasuk meneladani Al-Ghaffar.", type: "isian", correct: ["aib", "kesalahan"], exp: "Menutupi aib teman meneladani Al-Ghaffar." }
+  // Isian Baru
+  { q: "Al-Ghaffar artinya Maha ....", type: "isian", correct: ["Pengampun"], exp: "" },
+  { q: "Al-‘Aufw artinya Maha ....", type: "isian", correct: ["Pemaaf"], exp: "" },
+  { q: "Al-Ahad artinya Maha ....", type: "isian", correct: ["Esa"], exp: "" },
+  { q: "As-Samad artinya Maha ....", type: "isian", correct: ["Dibutuhkan"], exp: "" },
+  { q: "Surah yang menjelaskan Al-Ahad dan As-Samad adalah ....", type: "isian", correct: ["Al-Ikhlas"], exp: "" },
+  { q: "Al-Ghaffar menutupi dosa, Al-‘Aufw ... dosa.", type: "isian", correct: ["menghapus"], exp: "" },
+  { q: "Orang yang berbuat dosa sebaiknya ....", type: "isian", correct: ["bertaubat"], exp: "" },
+  { q: "Tidak menyekutukan Allah meneladani ....", type: "isian", correct: ["Al-Ahad"], exp: "" },
+  { q: "Berdoa hanya kepada Allah meneladani ....", type: "isian", correct: ["As-Samad"], exp: "" },
+  { q: "Menutupi ... teman termasuk meneladani Al-Ghaffar.", type: "isian", correct: ["aib"], exp: "" }
 ],
 "6-akhlak1": [
   { q:"Kawan/sahabat yang memiliki hubungan dekat dalam kehidupan sehari-hari disebut ...", correct:"Teman", wrong:["Musuh","Non-muslim","Orang asing"], exp:"Kawan dekat disebut teman." },
@@ -1134,17 +1244,17 @@ const DEFAULT_BANK = {
   { q:"Menolong teman non-muslim yang jatuh dari sepeda hukumnya ...", correct:"Boleh", wrong:["Haram","Makruh","Wajib"], exp:"Menolong teman non-muslim hukumnya boleh (sosial)." },
   { q:"Sikap kita jika teman beda agama sedang beribadah adalah ...", correct:"Menghormati dan tidak mengganggu", wrong:["Mengganggu","Menertawakan","Merekam"], exp:"Kita harus menghormati dan tidak mengganggu." },
   { q:"Nilai yang terkandung dalam Surah Al-Kafirun terkait toleransi ...", correct:"Hidup rukun tanpa mencampur ibadah", wrong:["Boleh mencampur ibadah","Tidak perlu bergaul","Tidak perlu toleransi"], exp:"Hidup rukun tanpa mencampur ibadah adalah nilai toleransi dalam Al-Kafirun." },
-  // Isian
-  { q: "Kawan dekat disebut ....", type: "isian", correct: ["teman", "sahabat"], exp: "Kawan dekat disebut teman." },
-  { q: "Non-muslim adalah orang yang tidak menganut ....", type: "isian", correct: ["Islam"], exp: "Non-muslim tidak menganut Islam." },
-  { q: "Perundungan dalam bahasa Inggris disebut ....", type: "isian", correct: ["bullying"], exp: "Perundungan disebut bullying." },
-  { q: "Toleransi dalam bahasa Arab disebut ....", type: "isian", correct: ["tasamuh"], exp: "Toleransi disebut tasamuh." },
-  { q: "Batasan toleransi dalam Islam tidak mencakup urusan ....", type: "isian", correct: ["akidah", "aqidah", "ibadah"], exp: "Toleransi tidak mencakup urusan akidah/ibadah." },
-  { q: "Menjenguk tetangga non-muslim yang sakit hukumnya ....", type: "isian", correct: ["boleh", "sunah"], exp: "Menjenguk tetangga non-muslim hukumnya boleh." },
-  { q: "Ikut ritual ibadah agama lain hukumnya ....", type: "isian", correct: ["haram"], exp: "Ikut ritual ibadah agama lain haram." },
-  { q: "Adu domba dalam bahasa Arab disebut ....", type: "isian", correct: ["namimah"], exp: "Adu domba disebut namimah." },
-  { q: "“Rahmatan lil ‘Alamin” artinya rahmat bagi seluruh ....", type: "isian", correct: ["alam"], exp: "Rahmatan lil 'Alamin artinya rahmat bagi seluruh alam." },
-  { q: "Persaudaraan sesama manusia disebut ukhuwah ....", type: "isian", correct: ["basyariyah", "basariyah"], exp: "Persaudaraan sesama manusia disebut ukhuwah basyariyah." }
+  // Isian Baru
+  { q: "Kawan dekat disebut ....", type: "isian", correct: ["teman"], exp: "" },
+  { q: "Non-muslim adalah orang yang tidak menganut ....", type: "isian", correct: ["Islam"], exp: "" },
+  { q: "Perundungan dalam bahasa Inggris disebut ....", type: "isian", correct: ["bullying"], exp: "" },
+  { q: "Toleransi dalam bahasa Arab disebut ....", type: "isian", correct: ["tasamuh"], exp: "" },
+  { q: "Batasan toleransi dalam Islam tidak mencakup urusan ....", type: "isian", correct: ["akidah"], exp: "" },
+  { q: "Menjenguk tetangga non-muslim yang sakit hukumnya ....", type: "isian", correct: ["boleh"], exp: "" },
+  { q: "Ikut ritual ibadah agama lain hukumnya ....", type: "isian", correct: ["haram"], exp: "" },
+  { q: "Adu domba dalam bahasa Arab disebut ....", type: "isian", correct: ["namimah"], exp: "" },
+  { q: "“Rahmatan lil ‘Alamin” artinya rahmat bagi seluruh ....", type: "isian", correct: ["alam"], exp: "" },
+  { q: "Persaudaraan sesama manusia disebut ukhuwah ....", type: "isian", correct: ["basyariyah"], exp: "" }
 ],
 "6-fikih1": [
   { q:"Makanan yang dibolehkan syariat Islam disebut ...", correct:"Halal", wrong:["Haram","Syubhat","Makruh"], exp:"Makanan yang dibolehkan disebut halal." },
@@ -1167,17 +1277,17 @@ const DEFAULT_BANK = {
   { q:"Berikut yang BUKAN termasuk makanan haram adalah ...", correct:"Daging sapi yang disembelih syar'i", wrong:["Bangkai","Daging babi","Darah"], exp:"Daging sapi yang disembelih syar'i adalah halal." },
   { q:"Makanan dari rezeki halal akan ...", correct:"Membawa keberkahan", wrong:["Merusak hati","Menimbulkan penyakit","Menghalangi doa"], exp:"Rezeki halal membawa keberkahan." },
   { q:"Allah memerintahkan kita memakan makanan halal dan thayyib karena ...", correct:"Untuk kebaikan manusia itu sendiri", wrong:["Ingin menyusahkan","Karena mahal","Karena langka"], exp:"Perintah tersebut untuk kebaikan manusia." },
-  // Isian
-  { q: "Makanan yang dibolehkan syariat disebut ....", type: "isian", correct: ["halal"], exp: "Makanan yang dibolehkan disebut halal." },
-  { q: "Kata thayyib artinya bergizi, higienis, dan ....", type: "isian", correct: ["bermanfaat", "baik"], exp: "Thayyib artinya bergizi, higienis, dan bermanfaat." },
-  { q: "Minuman beralkohol disebut ....", type: "isian", correct: ["khamr"], exp: "Minuman beralkohol disebut khamr." },
-  { q: "Bangkai yang halal dimakan adalah bangkai ....", type: "isian", correct: ["ikan"], exp: "Bangkai ikan halal dimakan." },
-  { q: "Daging babi hukumnya ....", type: "isian", correct: ["haram"], exp: "Daging babi haram." },
-  { q: "Makanan dari hasil mencuri hukumnya ....", type: "isian", correct: ["haram"], exp: "Makanan dari hasil mencuri haram." },
-  { q: "Makanan yang meragukan kehalalannya disebut ....", type: "isian", correct: ["syubhat"], exp: "Makanan meragukan disebut syubhat." },
-  { q: "Hewan yang disembelih tanpa menyebut nama Allah hukumnya ....", type: "isian", correct: ["haram"], exp: "Hewan yang disembelih tanpa menyebut nama Allah haram." },
-  { q: "Binatang buas yang bertaring hukumnya ....", type: "isian", correct: ["haram"], exp: "Binatang buas bertaring haram." },
-  { q: "Doa sebelum makan dibaca agar makanan menjadi ....", type: "isian", correct: ["berkah", "berkah."], exp: "Doa sebelum makan agar makanan menjadi berkah." }
+  // Isian Baru
+  { q: "Makanan yang dibolehkan syariat disebut ....", type: "isian", correct: ["halal"], exp: "" },
+  { q: "Kata thayyib artinya bergizi, higienis, dan ....", type: "isian", correct: ["bermanfaat"], exp: "" },
+  { q: "Minuman beralkohol disebut ....", type: "isian", correct: ["khamr"], exp: "" },
+  { q: "Bangkai yang halal dimakan adalah bangkai ....", type: "isian", correct: ["ikan"], exp: "" },
+  { q: "Daging babi hukumnya ....", type: "isian", correct: ["haram"], exp: "" },
+  { q: "Makanan dari hasil mencuri hukumnya ....", type: "isian", correct: ["haram"], exp: "" },
+  { q: "Makanan yang meragukan kehalalannya disebut ....", type: "isian", correct: ["syubhat"], exp: "" },
+  { q: "Hewan yang disembelih tanpa menyebut nama Allah hukumnya ....", type: "isian", correct: ["haram"], exp: "" },
+  { q: "Binatang buas yang bertaring hukumnya ....", type: "isian", correct: ["haram"], exp: "" },
+  { q: "Doa sebelum makan dibaca agar makanan menjadi ....", type: "isian", correct: ["berkah"], exp: "" }
 ],
 "6-spi1": [
   { q:"Khalifah pertama Khulafaur Rasyidin adalah ...", correct:"Abu Bakar as-Siddiq", wrong:["Umar bin Khattab","Utsman bin Affan","Ali bin Abi Thalib"], exp:"Khalifah pertama adalah Abu Bakar as-Siddiq." },
@@ -1200,17 +1310,17 @@ const DEFAULT_BANK = {
   { q:"Peristiwa hijrah Nabi menjadi awal penetapan ...", correct:"Kalender Hijriah", wrong:["Kalender Masehi","Kalender Jawa","Kalender Saka"], exp:"Hijrah Nabi menjadi awal penetapan Kalender Hijriah." },
   { q:"Tugas Khulafaur Rasyidin sebagai pengganti Nabi adalah ...", correct:"Sebagai pemimpin umat (bukan nabi)", wrong:["Sebagai nabi baru","Menerima wahyu","Membuat kitab"], exp:"Tugas mereka adalah sebagai pemimpin umat, bukan nabi." },
   { q:"Keteladanan Abu Bakar bagi siswa adalah ...", correct:"Jujur dan setia kawan", wrong:["Malas","Sombong","Pemarah"], exp:"Keteladanan Abu Bakar adalah jujur dan setia kawan." },
-  // Isian
-  { q: "Gelar khalifah pertama Khulafaur Rasyidin adalah ....", type: "isian", correct: ["As-Siddiq", "As Siddiq"], exp: "Gelar Abu Bakar adalah As-Siddiq." },
-  { q: "Gelar Umar bin Khattab adalah ....", type: "isian", correct: ["Al-Faruq", "Al Faruq"], exp: "Gelar Umar adalah Al-Faruq." },
-  { q: "Abu Bakar membenarkan peristiwa Isra ....", type: "isian", correct: ["Mi'raj", "Miraj"], exp: "Abu Bakar membenarkan Isra Mi'raj." },
-  { q: "Khalifah kedua Khulafaur Rasyidin adalah ....", type: "isian", correct: ["Umar", "Umar bin Khattab"], exp: "Khalifah kedua adalah Umar bin Khattab." },
-  { q: "Lembaga penerimaan negara yang dibentuk Umar adalah Baitul ....", type: "isian", correct: ["Mal"], exp: "Lembaga tersebut adalah Baitul Mal." },
-  { q: "Umar menetapkan Kalender ....", type: "isian", correct: ["Hijriah", "Hijriyah"], exp: "Umar menetapkan Kalender Hijriah." },
-  { q: "Pengumpulan mushaf Al-Qur’an dipimpin Zaid bin ....", type: "isian", correct: ["Tsabit", "Sabit"], exp: "Pengumpulan dipimpin Zaid bin Tsabit." },
-  { q: "Abu Bakar mendampingi Nabi hijrah ke Gua ....", type: "isian", correct: ["Tsur"], exp: "Mereka bersembunyi di Gua Tsur." },
-  { q: "Perang melawan pembangkang zakat disebut Perang ....", type: "isian", correct: ["Riddah"], exp: "Perang tersebut disebut Perang Riddah." },
-  { q: "Umar ronda malam untuk memastikan kondisi ....", type: "isian", correct: ["rakyat"], exp: "Umar ronda malam memastikan kondisi rakyat." }
+  // Isian Baru
+  { q: "Gelar khalifah pertama Khulafaur Rasyidin adalah ....", type: "isian", correct: ["As-Siddiq"], exp: "" },
+  { q: "Gelar Umar bin Khattab adalah ....", type: "isian", correct: ["Al-Faruq"], exp: "" },
+  { q: "Abu Bakar membenarkan peristiwa Isra ....", type: "isian", correct: ["Mi’raj"], exp: "" },
+  { q: "Khalifah kedua Khulafaur Rasyidin adalah ....", type: "isian", correct: ["Umar"], exp: "" },
+  { q: "Lembaga penerimaan negara yang dibentuk Umar adalah Baitul ....", type: "isian", correct: ["Mal"], exp: "" },
+  { q: "Umar menetapkan Kalender ....", type: "isian", correct: ["Hijriah"], exp: "" },
+  { q: "Pengumpulan mushaf Al-Qur’an dipimpin Zaid bin ....", type: "isian", correct: ["Tsabit"], exp: "" },
+  { q: "Abu Bakar mendampingi Nabi hijrah ke Gua ....", type: "isian", correct: ["Tsur"], exp: "" },
+  { q: "Perang melawan pembangkang zakat disebut Perang ....", type: "isian", correct: ["Riddah"], exp: "" },
+  { q: "Umar ronda malam untuk memastikan kondisi ....", type: "isian", correct: ["rakyat"], exp: "" }
 ]
 };
 
@@ -1223,12 +1333,105 @@ let timerInterval;
 let timeLeft = WAKTU_PER_SOAL;
 
 /* ============================================================
-   3. UTILITAS & KECERDASAN TYPO (FUZZY MATCHING)
+   3. AUDIO (DETAK JANTUNG & EFEK SUARA)
+   ============================================================ */
+let audioCtx = null;
+let heartbeatInterval = null;
+let isMuted = false;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// Musik latar: Detak Jantung
+function playHeartbeat() {
+  if (isMuted || !audioCtx) return;
+  
+  const playThump = (freq, delay) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
+    
+    gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + delay + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.3);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + 0.3);
+  };
+
+  playThump(60, 0);
+  playThump(50, 0.25);
+}
+
+function startMusic() {
+  initAudio();
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(playHeartbeat, 1000);
+}
+
+function stopMusic() {
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+}
+
+// Efek Suara: Jawaban Benar (Cling)
+function playCorrectSound() {
+  if (isMuted || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  // Nada ceria naik (C6 - E6 - G6)
+  [1046.50, 1318.51, 1567.98].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now + i * 0.08);
+    gain.gain.linearRampToValueAtTime(0.3, now + i * 0.08 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.5);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + i * 0.08);
+    osc.stop(now + i * 0.08 + 0.5);
+  });
+}
+
+// Efek Suara: Jawaban Salah (Buzz)
+function playWrongSound() {
+  if (isMuted || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth'; // Suara kasar/buzz
+  osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.3);
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+}
+
+/* ============================================================
+   4. UTILITAS & KECERDASAN TYPO (FUZZY MATCHING)
    ============================================================ */
 function keyOf(kelas, materi) { return kelas + '-' + materi; }
 function getSoal(kelas, materi) { return bank[keyOf(kelas, materi)] || []; }
 
-// Menghitung jarak Levenshtein (beda karakter) untuk toleransi salah ketik
 function hitungBedaHuruf(a, b) {
   if(a.length === 0) return b.length; 
   if(b.length === 0) return a.length; 
@@ -1247,7 +1450,6 @@ function hitungBedaHuruf(a, b) {
   return matrix[b.length][a.length];
 }
 
-// Cek jawaban dengan toleransi typo (diperbarui agar lebih aman untuk kata pendek)
 function cekJawabanIsian(inputSiswa, arrayKunci) {
   let bersihSiswa = inputSiswa.toLowerCase().replace(/[^a-z0-9]/g, '');
   if (bersihSiswa === '') return false;
@@ -1259,10 +1461,8 @@ function cekJawabanIsian(inputSiswa, arrayKunci) {
     
     let beda = hitungBedaHuruf(bersihSiswa, bersihKunci);
     
-    // Toleransi Typo:
     if (bersihKunci.length >= 7 && beda <= 2) return true; 
     if (bersihKunci.length >= 4 && bersihKunci.length <= 6 && beda <= 1) return true; 
-    // Kata pendek (<= 3 huruf) harus sama persis
   }
   return false;
 }
@@ -1286,7 +1486,7 @@ function showScreen(id) {
 }
 
 /* ============================================================
-   4. ALUR NAVIGASI
+   5. ALUR NAVIGASI
    ============================================================ */
 function mulaiBelajar() {
   renderKelas();
@@ -1343,7 +1543,7 @@ function pilihMateri(id) {
 }
 
 /* ============================================================
-   5. KUIS & TIMER
+   6. KUIS & TIMER
    ============================================================ */
 function mulaiKuis() {
   const semua = getSoal(state.kelas, state.materi);
@@ -1353,24 +1553,21 @@ function mulaiKuis() {
     return;
   }
 
-  // Pisahkan PG dan Isian
   const soalPG = semua.filter(s => s.type !== 'isian');
   const soalIsian = semua.filter(s => s.type === 'isian');
 
-  // Batas PG
   const batasPG = (state.kelas === 1 || state.kelas === 2) ? 10 : 20;
   
-  // Acak PG
   let kuisPG = shuffle(soalPG).slice(0, batasPG);
-  
-  // Acak Isian (maksimal 10)
   let kuisIsian = shuffle(soalIsian).slice(0, 10);
   
-  // Gabungkan: PG dulu, baru Isian
   kuis = [...kuisPG, ...kuisIsian];
   
   qi = 0; skor = 0; streak = 0;
   waktuMulai = Date.now();
+  
+  startMusic();
+
   showScreen('scrQuiz');
   tampilkanSoal();
 }
@@ -1434,7 +1631,9 @@ function handleEnter(e) {
 
 function startTimer() {
   clearInterval(timerInterval);
-  timeLeft = WAKTU_PER_SOAL;
+  const s = kuis[qi];
+  timeLeft = (s && s.type === 'isian') ? WAKTU_PER_ISIAN : WAKTU_PER_SOAL;
+  
   updateTimerDisplay();
   
   timerInterval = setInterval(() => {
@@ -1461,6 +1660,8 @@ function waktuHabis() {
   if (terjawab) return;
   terjawab = true;
   
+  playWrongSound(); // Suara salah saat waktu habis
+
   const s = kuis[qi];
   const fb = document.getElementById('qFeedback');
   
@@ -1515,9 +1716,11 @@ function cekIsian() {
   if (benar) {
     inpIsian.classList.add('correct');
     skor += 10; streak++;
+    playCorrectSound(); // Suara Benar
   } else {
     inpIsian.classList.add('wrong');
     streak = 0;
+    playWrongSound(); // Suara Salah
   }
 
   document.getElementById('qScore').textContent = skor;
@@ -1551,8 +1754,17 @@ function jawabPG(btn, opt, s) {
     else b.classList.add('dim');
   });
 
-  if (benar) { skor += 10; streak++; }
-  else { streak = 0; btn.classList.remove('dim'); btn.classList.add('wrong'); }
+  if (benar) { 
+    skor += 10; 
+    streak++; 
+    playCorrectSound(); // Suara Benar
+  }
+  else { 
+    streak = 0; 
+    btn.classList.remove('dim'); 
+    btn.classList.add('wrong'); 
+    playWrongSound(); // Suara Salah
+  }
 
   document.getElementById('qScore').textContent = skor;
 
@@ -1578,6 +1790,8 @@ function nextQuestion() {
 }
 
 function tampilkanHasil() {
+  stopMusic(); // Hentikan detak jantung saat kuis selesai
+
   const maks = kuis.length * 10;
   const persen = Math.round(skor / maks * 100);
 
@@ -1607,7 +1821,7 @@ function tampilkanHasil() {
 }
 
 /* ============================================================
-   6. KIRIM NILAI & TES KONEKSI
+   7. KIRIM NILAI & TES KONEKSI
    ============================================================ */
 function kirimNilai() {
   const nama = document.getElementById('inpNama').value.trim();
@@ -1682,6 +1896,9 @@ function tesKoneksi() {
     });
 }
 
+/* ============================================================
+   8. INISIALISASI
+   ============================================================ */
 </script>
 </body>
 </html>
